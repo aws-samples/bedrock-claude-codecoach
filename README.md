@@ -23,7 +23,7 @@ It's an architecture built on AWS managed services, eliminating the need for inf
 
 ## Demo
 
-https://github.com/aws-samples/bedrock-claude-codecoach/assets/6694421/d63928ff-3d10-4cba-b110-5e1b3d46d2c5
+https://github.com/stevensu1977/amazon-bedrock-coding-coach/assets/6694421/e59c7c1f-5054-4f3a-8729-970d6f57af11
 
 
 

@@ -1,0 +1,24 @@
+version: '3.2'
+
+services:
+    api:
+        image: ghcr.io/engineer-man/piston
+        container_name: piston_api
+        restart: always
+        ports:
+            - 2000:2000
+        volumes:
+            - ./data/piston/packages:/piston/packages
+        tmpfs:
+            - /piston/jobs:exec,uid=1000,gid=1000,mode=711
+            - /tmp:exec
+    codecoach:
+        image: codecoach
+        container_name: codecoach
+        restart: always
+        ports:
+            - 3000:3000
+        environment:
+            - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+            - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+

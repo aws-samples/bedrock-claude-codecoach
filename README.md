@@ -25,6 +25,10 @@ It's an architecture built on AWS managed services, eliminating the need for inf
 
 https://github.com/stevensu1977/amazon-bedrock-coding-coach/assets/6694421/e59c7c1f-5054-4f3a-8729-970d6f57af11
 
+CodeCoach Vimeo link:
+
+[<img src="https://i.vimeocdn.com/video/1745485180-bfd62fa237d46ed7ced089aed94304371930008c865a89801f740610cf832da4-d_640" width="50%">](https://vimeo.com/879129321 "CodeCoach")
+
 
 
 

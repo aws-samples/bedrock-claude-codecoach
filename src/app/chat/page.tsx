@@ -51,7 +51,7 @@ interface ChatMessage {
 
 
 
-const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || 'http://localhost:3000';
+const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || '';
 
 
 export default function Chat() {
@@ -69,7 +69,7 @@ export default function Chat() {
   const chatInput = useRef<HTMLInputElement>(null);
 
   const [inputValue, setInputValue] = useState('');
-  
+
 
   const [aiThinking, setAiThinking] = useState(false);
   const { colorMode } = useColorMode()
@@ -86,7 +86,7 @@ export default function Chat() {
     1000
   );
 
-  
+
   const scrollToBottom = () => {
 
     if (messagesEnd && messagesEnd.current) {
@@ -105,7 +105,7 @@ export default function Chat() {
 
   const clearMessages=()=>{
     setMessages([])
-  
+
   }
 
   const handlerShowAlert=(text:string,status?:string, timeout?:number)=>{
@@ -128,7 +128,7 @@ export default function Chat() {
       setInputValue(runResultValue)
       sendMessage(runResultValue)
      }
-    
+
   }, [runResultValue])
 
   const sendMessage = (message: string) => {
@@ -156,14 +156,14 @@ export default function Chat() {
   const removeMessageByIndex=(index:number) =>{
 
     setMessages((pre) => {
-      
+
       if (index < 0 || index >= pre.length) {
         // Invalid index, return the original array
         return pre;
       }
-    
+
       const updatedMessages = [...pre.slice(0, index), ...pre.slice(index + 1)];
-     
+
       return updatedMessages;
     });
   }
@@ -192,7 +192,7 @@ export default function Chat() {
           right: "5px",
           position: "absolute",
         }}>
-        
+
         <IconButton aria-label='Copy this code' icon={<FaRegCopy/>} onClick={handleClick} />
       </div>
     )
@@ -205,14 +205,14 @@ export default function Chat() {
 
   function CodeExecuteBtn({ children, language}: CodeExecuteBtnProps) {
     const [copyOk, setCopyOk] = useState(false);
-   
+
     const iconColor = copyOk ? '#0af20a' : '#ddd';
     const icon = copyOk ? 'fa-check-square' : 'fa-copy';
     const handleClick = (e: any) => {
       console.log(children,language)
 
       setCopyOk(true);
-      
+
       setTimeout(() => {
         setCopyOk(false);
         setShowAlert(false);
@@ -227,7 +227,7 @@ export default function Chat() {
           position: "absolute",
         }}>
         <ExecuteCodeButton language={language} code={children} />
-        
+
       </div>
     )
   }
@@ -243,32 +243,32 @@ export default function Chat() {
 
   const onReply = async (value: string) => {
     try {
-      
+
       const token=countTokens(value)
       console.log(`use token ${token}`)
 
       setAiThinking(true);
-      
+
       let res: Response;
       let isMindmap: boolean = false;
       const history = messages.slice(-5)
-      
+
       if(auth.role==="guest"&&authSettingsValue.authType==="IAMROLE"){
         console.log("Need setup auth")
         setAiThinking(false);
         handlerShowAlert("Need setup auth","error")
-        return 
+        return
       }
-      
+
       res = await fetchRequest("POST",`${baseURL}/api/bedrock/completion`, btoa(JSON.stringify(authSettingsValue)), {
         query: value,
-        history: history  
-        
+        history: history
+
       }  );
       if (res.status!==200){
         setAiThinking(false);
         updateMessageList("Please check your auth settings")
-        return 
+        return
       }
       const reader = res?.body?.getReader() as ReadableStreamDefaultReader;
 
@@ -299,7 +299,7 @@ export default function Chat() {
     } catch (error) {
       setAiThinking(false);
       console.log(error);
-      
+
     }
   };
 
@@ -332,7 +332,7 @@ export default function Chat() {
         >
           {isClient && messages.map((m, index) =>
             <Box key={index} pt="50px">
-              
+
               <Flex alignContent={"right"} justifyContent={"right"}>
                 <Box p='2' bg={isDark?"blue.400":"gray.100"} rounded={"8px"}>
                   {m.question}
@@ -340,7 +340,7 @@ export default function Chat() {
                 <Box p='2' >
                   You
                 </Box>
-                
+
               </Flex>
               <Box mt="20px"><CleanMessagesByIndex index={index} cleanMessageByIndxe={removeMessageByIndex} />
                 <Icon as={BsRobot} boxSize="24px" color={isDark?"blue.300":"blue.600"}/> {aiThinking&&<Spinner size='sm'/>} {!aiThinking&&m.costToken&&<Button leftIcon={<BiDollarCircle />} variant='solid' size={"xs"}>Token Cost : {m.costToken}</Button>}
@@ -412,7 +412,7 @@ export default function Chat() {
           ref={ chatInput }
           size="md"
           placeholder="Enter message"
-          
+
           onChange={(e) => debounced(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
@@ -420,15 +420,15 @@ export default function Chat() {
                 sendMessage(chatInput.current.value);
                 chatInput.current.value="";
               }
-             
-             
+
+
             }
           }}
           w="70vw"
           ml={"20px"}
         />
       </Flex>
-      
+
     </Flex>
   )
 }

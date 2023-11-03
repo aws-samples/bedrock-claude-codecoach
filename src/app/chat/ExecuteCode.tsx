@@ -11,7 +11,7 @@ import {runResult} from "../../state";
 import { useSetRecoilState } from "recoil";
 
 
-export const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || 'http://localhost:3000';
+export const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || '';
 
 
 
@@ -23,20 +23,20 @@ interface ExcuteCodeProps {
 const ExecuteCodeButton = ({language,code}:ExcuteCodeProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [errorMessage, setErrorMessage]=useState("");
-  
+
   const onClose = () => setIsOpen(false);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [text, setText] = useState(code);
   const [output, setOutput] = useState('');
 
   const setRunResult=useSetRecoilState(runResult);
-  
- 
+
+
   const onExecute = () => {
-    
+
     console.log(language,code)
 
-    
+
     //onClose();
 
     fetchRequestCode("POST", `${baseURL}/api/execute`, {
@@ -46,16 +46,16 @@ const ExecuteCodeButton = ({language,code}:ExcuteCodeProps) => {
         .then((res) => res.text())
         .then((body) => {
           const {run }=JSON.parse(body);
-          
+
           if(run){
             if(run.stderr!==""){
               setErrorMessage(`language: ${language}\n code: ${text}\n stdout: ${run.stdout} \nstderr: ${run.stderr}, please fix this issue \n`)
             }
             setOutput(`stdout: ${run.stdout} \nstderr: ${run.stderr} \n`);
           }
- 
+
         });
-  
+
   }
   return (
     <>
@@ -84,7 +84,7 @@ const ExecuteCodeButton = ({language,code}:ExcuteCodeProps) => {
                         maxHeight={'300px'}
                     />
             <Box>
-             output:   
+             output:
             </Box>
              <CodeMirror
                         value={output}
@@ -93,12 +93,12 @@ const ExecuteCodeButton = ({language,code}:ExcuteCodeProps) => {
                         minWidth={'100px'}
                         minHeight={'100px'}
                         maxHeight={'100px'}
-                       
+
                     />
-            
+
             </AlertDialogBody>
             <AlertDialogFooter>
-              
+
               <Button ref={cancelRef} onClick={onClose}>
                 Close
               </Button>

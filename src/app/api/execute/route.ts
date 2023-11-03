@@ -3,7 +3,7 @@ import piston from "piston-client";
 
 
 
-const pistonURL = process.env.NETX_PUBLIC_PISTON_SERVER_URL || 'http://localhost:2000';
+const pistonURL = process.env.NETX_PUBLIC_PISTON_SERVER_URL || 'http://api:2000';
 
 const SUPPORTED_LANGUAGES = ["python","php","lua","typescript","go"]
 

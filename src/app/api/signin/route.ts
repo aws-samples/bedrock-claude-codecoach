@@ -8,7 +8,7 @@ import crypto  from "crypto";
 import expiredAt from "../../../utils/expirydate";
 
 const DDB_TABLE = process.env.NEXT_PUBLIC_DDB_TABLE||"bedrock-claude-codecoach-users";
-const AWS_REGION = process.env.NEXT_PUBLIC_AWS_REGION ||"us-east-1"
+const AWS_REGION = process.env.NEXT_PUBLIC_AWS_REGION ||"us-west-2"
 
 console.log(process.env.NEXT_PUBLIC_DDB_TABLE)
 

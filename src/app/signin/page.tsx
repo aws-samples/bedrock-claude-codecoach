@@ -28,7 +28,7 @@ interface User{
 }
 
 
-const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || 'http://localhost:3000';
+const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || '';
 
 async function Post(user:User) {
 
@@ -44,7 +44,7 @@ async function Post(user:User) {
     console.log("auth failed")
   }
   return data
- 
+
 }
 
 export default function SigninScreen() {
@@ -55,7 +55,7 @@ export default function SigninScreen() {
   const router = useRouter()
 
   const setAuthState = useSetRecoilState(authState)
-  
+
   const handIsOpen=(open:boolean)=>{
     console.log("andIsOpen invoke",open)
   setIsOpen(open)
@@ -68,12 +68,12 @@ export default function SigninScreen() {
     console.log(isAuth)
 
   },[isAuth])
-  
- 
+
+
   return (
     <>
     <AlertInfo isOpen={isOpen} setIsOpen={handIsOpen} delayClose={5} title='SignIn information: ' desc="auth failed!" status="error"/>
-      
+
     <Stack minH={'100vh'} direction={{ base: 'column', md: 'row' }}>
       <Flex p={8} flex={1} align={'center'} justify={'center'}>
         <Stack spacing={4} w={'full'} maxW={'md'}>
@@ -115,7 +115,7 @@ export default function SigninScreen() {
                   setIsOpen(true)
                 }
               })
-              
+
             }}>
               Sign in
             </Button>

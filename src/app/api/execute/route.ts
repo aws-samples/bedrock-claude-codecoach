@@ -5,6 +5,9 @@ import piston from "piston-client";
 
 const pistonURL = process.env.NETX_PUBLIC_PISTON_SERVER_URL || 'http://api:2000';
 
+const pistonRunTimeout = process.env.NETX_PUBLIC_PISTON_RUN_TIMEOUT || 10000;
+
+
 const SUPPORTED_LANGUAGES = ["python","php","lua","typescript","go"]
 
 /**
@@ -17,7 +20,7 @@ export async function POST(req: NextRequest) {
     
     const {code,language}=await req.json()
     
-    console.log(code,language)
+    console.log(code,language,pistonRunTimeout)
 
     if (!SUPPORTED_LANGUAGES.includes(language)){
       const res=NextResponse.json({"status":"runtime not exits "},{status:500})
@@ -35,7 +38,8 @@ export async function POST(req: NextRequest) {
      
       const result = await client.execute({
         //language: "python",version:"3.10.0"
-        language: language
+        language: language,
+        runTimeout: 10000,
       }, code);
       return result
   

@@ -63,12 +63,15 @@ add_users(){
 
 # build bedrock-claude-codecoach docker image
 build_image(){
-  #cd ~
-  #git clone https://github.com/aws-samples/bedrock-claude-codecoach
+  if [ ! -d ~/bedrock-claude-codecoach ];then
+    cd ~
+    git clone https://github.com/aws-samples/bedrock-claude-codecoach
+  fi
   cd ~/bedrock-claude-codecoach
   # use env configuration
   mv .env.sample .env.local
   # set default region
+  sed -i '/^NEXT_PUBLIC_AWS_REGION/d' .env.local
   echo "NEXT_PUBLIC_AWS_REGION=\"$(aws configure get default.region)\"" >> .env.local
   docker build -t codecoach .
 }

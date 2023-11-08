@@ -8,7 +8,7 @@ const pistonURL = process.env.NETX_PUBLIC_PISTON_SERVER_URL || 'http://api:2000'
 const pistonRunTimeout = process.env.NETX_PUBLIC_PISTON_RUN_TIMEOUT || 10000;
 
 
-const SUPPORTED_LANGUAGES = ["python","php","lua","typescript","go"]
+const SUPPORTED_LANGUAGES = ["python","php","lua","typescript","go","awscli"]
 
 /**
  * POST handler for API route
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       const result = await client.execute({
         //language: "python",version:"3.10.0"
         language: language,
-        runTimeout: 10000,
+        runTimeout: 15000,
       }, code);
       return result
   

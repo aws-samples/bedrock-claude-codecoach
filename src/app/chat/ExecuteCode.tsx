@@ -1,5 +1,5 @@
 import { useState,useRef } from "react";
-import { IconButton,Box,Button, AlertDialog, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, Textarea } from "@chakra-ui/react";
+import { IconButton,Box,Button, AlertDialog, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, Spinner } from "@chakra-ui/react";
 import CodeMirror, { lineNumbers } from '@uiw/react-codemirror';
 
 import { VscTerminalPowershell } from "react-icons/vsc";
@@ -28,6 +28,10 @@ const ExecuteCodeButton = ({language,code}:ExcuteCodeProps) => {
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [text, setText] = useState(code);
   const [output, setOutput] = useState('');
+  const [loading, setLoading] = useState(false);
+
+
+
 
   const setRunResult=useSetRecoilState(runResult);
 
@@ -35,7 +39,7 @@ const ExecuteCodeButton = ({language,code}:ExcuteCodeProps) => {
   const onExecute = () => {
 
     console.log(language,code)
-
+    setLoading(true)
 
     //onClose();
 
@@ -54,7 +58,7 @@ const ExecuteCodeButton = ({language,code}:ExcuteCodeProps) => {
             setOutput(`stdout: ${run.stdout} \nstderr: ${run.stderr} \n`);
           }
 
-        });
+        }).finally(()=>{ setLoading(false)});
 
   }
   return (
@@ -111,7 +115,8 @@ const ExecuteCodeButton = ({language,code}:ExcuteCodeProps) => {
                How to fix
               </Button>
               }
-              <Button colorScheme="red" onClick={onExecute} ml={3}>
+              
+              <Button isLoading={loading} colorScheme="red" onClick={onExecute} ml={3}>
                 Execute
               </Button>
             </AlertDialogFooter>

@@ -32,7 +32,7 @@ const runResult =atom({
 
 const authSettings =atom({
   key: 'authSettings',
-  default: {"authType":"IAMROLE","akValue":"","skValue":"","cognitoIDValue":"","cognitoRegionValue":"us-east-1"},
+  default: {"authType":"IAMROLE","akValue":"","skValue":"","cognitoIDValue":"","cognitoRegionValue":"us-east-1","aiRole":"CODECOACH"},
 })
 
 

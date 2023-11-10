@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  SSHKeyName:
+    Description: Name of existing EC2 SSH key pair
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: Must be an existing EC2 key pair name
+
+Mappings:
+  RegionMap:
+    us-east-1:
+      AMI: ami-05c13eab67c5d8861
+    us-west-2:
+      AMI: ami-00448a337adc93c05
+
+Resources:
+
+  EC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref EC2Role
+
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
+      InstanceType: c6i.large
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      KeyName: !Ref SSHKeyName
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          cd /root/ && sh -c "$(curl -fsSL https://raw.githubusercontent.com/aws-samples/bedrock-claude-codecoach/main/init.sh)"
+      SecurityGroupIds:
+        - !Ref InstanceSG
+
+  InstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH, HTTP and HTTPS access
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          FromPort: 22
+          ToPort: 22
+          IpProtocol: tcp
+        - CidrIp: 0.0.0.0/0
+          FromPort: 3000
+          ToPort: 3000
+          IpProtocol: tcp
+        - CidrIp: 0.0.0.0/0
+          FromPort: 2000
+          ToPort: 2000
+          IpProtocol: tcp
+
+  CloudFrontDist:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - DomainName: !GetAtt MyEC2Instance.PublicDnsName
+            Id: myEC2Origin
+            CustomOriginConfig:
+              HTTPPort: 3000
+              OriginProtocolPolicy: http-only
+        Enabled: true
+        DefaultCacheBehavior:
+          TargetOriginId: myEC2Origin
+          ViewerProtocolPolicy: allow-all
+          AllowedMethods:
+            - DELETE
+            - GET
+            - HEAD
+            - OPTIONS
+            - PATCH
+            - POST
+            - PUT
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+          OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3
+          ForwardedValues:
+            QueryString: false
+
+Outputs:
+  CloudFrontDomainName:
+    Value: !GetAtt CloudFrontDist.DomainName

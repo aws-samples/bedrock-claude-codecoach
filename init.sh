@@ -7,10 +7,12 @@ init(){
   yum install -y git nodejs.x86_64 docker jq
   npm install yarn -g
   systemctl start docker
+  docker compose --version > /dev/null 2>&1
+  if [ $? -gt 0 ]; then
+      curl -L https://download.docker.com/linux/centos/7/x86_64/stable/Packages/docker-compose-plugin-2.6.0-3.el7.x86_64.rpm -o ./compose-plugin.rpm
+      yum install ./compose-plugin.rpm -y
+  fi
 
-  python3 -m venv .venv
-  . .venv/bin/activate
-  pip install docker-compose >/dev/null 2>&1
   aws --version >/dev/null 2>&1
   if [ $? -eq 1 ]; then
   	# install aws cli
@@ -63,24 +65,27 @@ add_users(){
 
 # build bedrock-claude-codecoach docker image
 build_image(){
-  #cd ~
-  #git clone https://github.com/aws-samples/bedrock-claude-codecoach
+  if [ ! -d ~/bedrock-claude-codecoach ];then
+    cd ~
+    git clone https://github.com/aws-samples/bedrock-claude-codecoach
+  fi
   cd ~/bedrock-claude-codecoach
   # use env configuration
   mv .env.sample .env.local
   # set default region
+  sed -i '/^NEXT_PUBLIC_AWS_REGION/d' .env.local
   echo "NEXT_PUBLIC_AWS_REGION=\"$(aws configure get default.region)\"" >> .env.local
   docker build -t codecoach .
 }
 
 start(){
- . ~/.venv/bin/activate
- cd ~/bedrock-claude-codecoach &&  docker-compose up -d
+ #. ~/.venv/bin/activate
+ cd ~/bedrock-claude-codecoach &&  docke compose up -d
 }
 
 stop(){
- . ~/.venv/bin/activate
- cd ~/bedrock-claude-codecoach &&  docker-compose down
+ #. ~/.venv/bin/activate
+ cd ~/bedrock-claude-codecoach &&  docker compose down
 }
 
 add_runtime(){
@@ -101,38 +106,69 @@ add_runtime(){
 
 }
 
-main() {
-  if [ x"$1" = x ]; then
-    init
-    build_image
-    add_users "admin@demo.com" "123456!@#" "admin"
-    add_users "guest@demo.com" "123456" "guest"
-    start
-    sleep 10s
-    add_runtime python=3.10.0
-    add_runtime node
-    add_runtime go
-    add_runtime php
-    add_runtime typescript
-  elif [ "$1" == "start" ];then
-    start
-  elif [ "$1" == "stop" ];then
-    stop
-  elif [ "$1" == "add_runtime" ];then
-    add_runtime $2 $3
-  else
-    echo "无效的参数 $1"
-    exit 1
-  fi
-
-}
-
 if [ "$(id -u)" != "0" ]; then
    echo "please run the script with root user,you can run (sudo su -) to swich to root" 1>&2
    exit 1
 fi
 
-main "$1" "$2" "$3"
+if [ $# -eq 0 ];then
+      init
+      build_image
+      add_users "admin@demo.com" "123456!@#" "admin"
+      add_users "guest@demo.com" "123456" "guest"
+      start
+      sleep 10s
+      add_runtime python=3.10.0
+      add_runtime node
+      add_runtime go
+      add_runtime php
+      add_runtime typescript
+else
+  while getopts ":struh" opt; do
+    case $opt in
+      s)
+        start
+        ;;
+
+      t)
+        stop
+        ;;
+
+      r)
+        add_runtime $2
+        ;;
+
+      u)
+        EMAIL=$2
+        PASSWORD=$3
+        ROLE=$4
+        add_users $EMAIL $PASSWORD $ROLE
+        ;;
+
+      h)
+        HELP=true
+        ;;
+
+      \?)
+        echo "Invalid option: -$OPTARG" >&2
+        exit 1
+        ;;
+    esac
+  done
+
+  if [ "$HELP" = true ]; then
+    echo "Usage: $0 [options]"
+    echo
+    echo "Options:"
+    echo " -s              Start services"
+    echo " -t              Stop services"
+    echo " -r <runtime>    Add runtime"
+    echo " -u <user>       Add user (email password role)"
+    echo " -h              Print this help"
+    exit 0
+  fi
+
+fi
 
 
 

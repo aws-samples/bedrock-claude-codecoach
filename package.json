@@ -27,7 +27,7 @@
     "@uiw/react-codemirror": "^4.21.19",
     "aws-crt": "^1.18.0",
     "aws-sdk": "^2.1472.0",
-    "axios": "^1.5.1",
+    "axios": "^1.6.0",
     "character-entities": "^2.0.2",
     "character-entities-legacy": "^3.0.0",
     "framer-motion": "^6.3.0",

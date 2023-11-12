@@ -46,7 +46,7 @@ add_users(){
   aws dynamodb list-tables | grep "${table_name}" >/dev/null 2>&1
   if [ $? -eq 1 ]; then
       aws dynamodb create-table \
-          --table-name bedrock-claude-codecoach-users \
+          --table-name ${table_name} \
           --attribute-definitions \
               AttributeName=email,AttributeType=S \
           --key-schema \
@@ -54,10 +54,10 @@ add_users(){
           --provisioned-throughput \
               ReadCapacityUnits=5,WriteCapacityUnits=5
   fi
-  password_hash=$(echo -n $password | openssl dgst -sha1 -hex | sed 's/^.* //')
+ password_hash=$(echo -n $password |openssl dgst -sha512 -hmac "privateKey" | sed 's/^.* //')
   role=$(expr ${role} == "admin"?"admin":"guest")
   aws dynamodb put-item \
-      --table-name bedrock-claude-codecoach-users \
+      --table-name ${table_name} \
       --item \
           "{\"email\": {\"S\": \"${email}\"}, \"password\": {\"S\": \"${password_hash}\"}, \"role\": {\"S\": \"${role}\"}}"
 
@@ -80,7 +80,7 @@ build_image(){
 
 start(){
  #. ~/.venv/bin/activate
- cd ~/bedrock-claude-codecoach &&  docke compose up -d
+ cd ~/bedrock-claude-codecoach &&  docker compose up -d
 }
 
 stop(){

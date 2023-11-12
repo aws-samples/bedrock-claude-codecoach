@@ -16,9 +16,12 @@ import {
   Icon,
   Input,
   IconButton,
+  Text,
   Stack,
   Spinner
 } from '@chakra-ui/react'
+import { InfoIcon } from '@chakra-ui/icons'
+
 import { FaRegCopy } from "react-icons/fa"
 import { BsRobot,BsArrowUpSquare,BsArrowDownSquare } from "react-icons/bs";
 import { BiDollarCircle } from "react-icons/bi"
@@ -32,6 +35,7 @@ import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 
 import CleanMessages, {CleanMessagesByIndex} from "./CleanMessages"
 import ExportMessages from "./ExportMessages"
+import ImportMessages from './ImportMessages';
 import ExecuteCodeButton from "./ExecuteCode"
 
 import fetchRequest from '../../utils/fetch';
@@ -76,6 +80,30 @@ export default function Chat() {
   const isDark = colorMode === 'dark'
 
   const runResultValue=useRecoilValue(runResult);
+
+
+  const rebotoColor=()=>{
+    if(authSettingsValue.aiRole=="OPSCOACH"){
+        return isDark?"orange.300":"orange.600"
+    }else if(authSettingsValue.aiRole=="NORMAL"){
+        return isDark?"green.300":"green.600"
+    }else{
+        return isDark?"blue.300":"blue.600"
+    }
+
+  }
+
+  const rebotoTitle=()=>{
+    if(authSettingsValue.aiRole=="OPSCOACH"){
+        return "OpsCoach"
+    }else if(authSettingsValue.aiRole=="NORMAL"){
+      return "ClaudeCoach"
+    }else{
+        return "CodeCoach"
+    }
+
+}
+
 
   const debounced = useDebouncedCallback(
     // function
@@ -262,7 +290,8 @@ export default function Chat() {
 
       res = await fetchRequest("POST",`${baseURL}/api/bedrock/completion`, btoa(JSON.stringify(authSettingsValue)), {
         query: value,
-        history: history
+        history: history,
+        role: authSettingsValue.aiRole,
 
       }  );
       if (res.status!==200){
@@ -343,7 +372,8 @@ export default function Chat() {
 
               </Flex>
               <Box mt="20px"><CleanMessagesByIndex index={index} cleanMessageByIndxe={removeMessageByIndex} />
-                <Icon as={BsRobot} boxSize="24px" color={isDark?"blue.300":"blue.600"}/> {aiThinking&&<Spinner size='sm'/>} {!aiThinking&&m.costToken&&<Button leftIcon={<BiDollarCircle />} variant='solid' size={"xs"}>Token Cost : {m.costToken}</Button>}
+              
+              <Icon as={BsRobot} boxSize="24px" color={rebotoColor()}/>{aiThinking&&<Spinner size='sm'/>} {!aiThinking&&m.costToken&&<Button leftIcon={<BiDollarCircle />} variant='solid' size={"xs"}>Token Cost : {m.costToken}</Button>}
               </Box>
               <Box ml="30px"  >
                 <ReactMarkdown
@@ -356,7 +386,7 @@ export default function Chat() {
                       //console.log(`langusage ${match}`)
                       return match ? (
                         <>
-                        {match[1]==="python"&&<CodeExecuteBtn language={match[1]} children={String(children).replace(/\n$/, '')} />}
+                        {(match[1]==="python"||match[1]==="bash")&&<CodeExecuteBtn language={match[1]==="bash"?"awscli":match[1]} children={String(children).replace(/\n$/, '')} />}
                         <SyntaxHighlighter
                           {...props}
                           children={String(children).replace(/\n$/, '')}
@@ -391,6 +421,8 @@ export default function Chat() {
       <CleanMessages clearMessages={clearMessages} />
       <Box h="1rem" />
       <ExportMessages messages={messages} />
+      <Box h="1rem" />
+      <ImportMessages ></ImportMessages>
       <Box h="1rem" />
       <IconButton
             right={4}
@@ -427,8 +459,9 @@ export default function Chat() {
           w="70vw"
           ml={"20px"}
         />
+        
       </Flex>
-
+      
     </Flex>
   )
 }

@@ -4,11 +4,38 @@ import piston from "piston-client";
 
 
 const pistonURL = process.env.NETX_PUBLIC_PISTON_SERVER_URL || 'http://api:2000';
-
 const pistonRunTimeout = process.env.NETX_PUBLIC_PISTON_RUN_TIMEOUT || 10000;
+const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || ''
 
+const SUPPORTED_LANGUAGES = ["python","php","lua","typescript","go","awscli","sqlite3","rust"]
 
-const SUPPORTED_LANGUAGES = ["python","php","lua","typescript","go","awscli"]
+async function PostAction(payload: {
+  history: any[]
+  query: string
+  role: string
+}): Promise<any> {
+
+  try {
+    console.log(payload)
+    
+    const response = await fetch(`${baseURL}/api/bedrock/completion`, {
+      method: 'POST', 
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer eyJhdXRoVHlwZSI6IklBTVJPTEUiLCJha1ZhbHVlIjoiIiwic2tWYWx1ZSI6IiIsImNvZ25pdG9JRFZhbHVlIjoiIiwiY29nbml0b1JlZ2lvblZhbHVlIjoidXMtZWFzdC0xIiwiYWlSb2xlIjoiT1BTQ09BQ0gifQ==`
+      },
+      body: JSON.stringify(payload)  
+    })
+    
+    const context= await response.text()
+    return context
+
+  } catch (error) {
+    console.error(error)
+    throw new Error('Error making request')
+  }
+
+}
 
 /**
  * POST handler for API route
@@ -18,7 +45,7 @@ const SUPPORTED_LANGUAGES = ["python","php","lua","typescript","go","awscli"]
 export async function POST(req: NextRequest) {
   try {
     
-    const {code,language}=await req.json()
+    const {code,language,question}=await req.json()
     
     console.log(code,language,pistonRunTimeout)
 
@@ -37,10 +64,16 @@ export async function POST(req: NextRequest) {
       console.log(runtimes);
      
       const result = await client.execute({
-        //language: "python",version:"3.10.0"
         language: language,
         runTimeout: 15000,
       }, code);
+      
+      if (result.run?.stderr===""&& result.run?.stdout!==""&&question){
+        console.log("PostAction invoke")
+        const answer= await PostAction({"history":[`${result.run.stdout}`],query:`${question}`, role:"AWSCLIEXPRT"})
+        console.log(answer)
+        return {run:{answer:answer}}
+      }
       return result
   
   })();

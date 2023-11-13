@@ -37,8 +37,10 @@ import CleanMessages, {CleanMessagesByIndex} from "./CleanMessages"
 import ExportMessages from "./ExportMessages"
 import ImportMessages from './ImportMessages';
 import ExecuteCodeButton from "./ExecuteCode"
+import ContinueMessage from "./ContinueMessage";
 
 import fetchRequest from '../../utils/fetch';
+import {fetchRequestCode} from "../../utils/fetch";
 
 import {runResult,authSettings,authState} from "../../state";
 
@@ -53,10 +55,32 @@ interface ChatMessage {
 }
 
 
+const SUPPORTED_LANGUAGES = ["python","php","lua","typescript","go","awscli","sqlite3","sql","rust"]
 
 
 const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || '';
 
+function supported(language) {
+  return SUPPORTED_LANGUAGES.includes(language)
+}
+function languageChoice(language){
+  if (language==="bash"){
+    return "awscli"
+  }
+
+  if (language==="sql"){
+    return "sqlite3"
+  }
+
+  return language
+}
+
+function getBashMarkdown(text: string) {
+  const regex = /```bash([\s\S]*?)```/;
+  const match = text.match(regex);
+  const result= match ? match[0] : ''; 
+  return result.replace('```bash','').replace('```','')
+}
 
 export default function Chat() {
   //const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -79,7 +103,7 @@ export default function Chat() {
   const { colorMode } = useColorMode()
   const isDark = colorMode === 'dark'
 
-  const runResultValue=useRecoilValue(runResult);
+  const [runResultValue,setRunResult]=useRecoilState(runResult);
 
 
   const rebotoColor=()=>{
@@ -93,14 +117,25 @@ export default function Chat() {
 
   }
 
-  const rebotoTitle=()=>{
-    if(authSettingsValue.aiRole=="OPSCOACH"){
-        return "OpsCoach"
-    }else if(authSettingsValue.aiRole=="NORMAL"){
-      return "ClaudeCoach"
-    }else{
-        return "CodeCoach"
-    }
+
+
+
+const onExecute = (code:string,question:string) => {
+
+  console.log(code)
+  
+
+  //onClose();
+
+  fetchRequestCode("POST", `${baseURL}/api/execute`, {
+      language: "awscli",
+      code: code,
+      question:question
+    })
+      .then((res) => res.text())
+      .then((body) => {
+        console.log(body)
+      })
 
 }
 
@@ -155,14 +190,15 @@ export default function Chat() {
      if (runResultValue!=""){
       setInputValue(runResultValue)
       sendMessage(runResultValue)
+      
      }
+     return ()=>{setRunResult("")}
 
   }, [runResultValue])
 
   const sendMessage = (message: string) => {
 
     const token=countTokens(message)
-
     setMessages([...messages, { question: message, reply: "",costToken:token }])
     onReply(message);
   }
@@ -228,10 +264,11 @@ export default function Chat() {
 
  interface CodeExecuteBtnProps {
   children:any,
+  setChildren:any,
   language: string
  }
 
-  function CodeExecuteBtn({ children, language}: CodeExecuteBtnProps) {
+  function CodeExecuteBtn({ children, language,setChildren}: CodeExecuteBtnProps) {
     const [copyOk, setCopyOk] = useState(false);
 
     const iconColor = copyOk ? '#0af20a' : '#ddd';
@@ -254,7 +291,7 @@ export default function Chat() {
           right: "60px",
           position: "absolute",
         }}>
-        <ExecuteCodeButton language={language} code={children} />
+        <ExecuteCodeButton language={language} code={children} setCode={setChildren} />
 
       </div>
     )
@@ -324,7 +361,7 @@ export default function Chat() {
         }
         scrollToBottom()
       }
-
+     
     } catch (error) {
       setAiThinking(false);
       console.log(error);
@@ -383,13 +420,13 @@ export default function Chat() {
                     pre: Pre,
                     code({ node, className, children, ...props }) {
                       const match = /language-(\w+)/.exec(className || '')
-                      //console.log(`langusage ${match}`)
+                      const [codeChildren, setCodeChildren]=useState(String(children).replace(/\n$/, ''))
                       return match ? (
                         <>
-                        {(match[1]==="python"||match[1]==="bash")&&<CodeExecuteBtn language={match[1]==="bash"?"awscli":match[1]} children={String(children).replace(/\n$/, '')} />}
+                        {(supported(match[1]))&&<CodeExecuteBtn language={languageChoice(match[1])} children={codeChildren} setChildren={setCodeChildren}/>}
                         <SyntaxHighlighter
                           {...props}
-                          children={String(children).replace(/\n$/, '')}
+                          children={codeChildren}
                           style={oneDark}
                           language={match[1]}
                           PreTag="div"
@@ -404,6 +441,10 @@ export default function Chat() {
                     }
                   }}
                 />
+              {authSettingsValue.aiRole==="OPSCOACH"&&!aiThinking&&<>
+              <ContinueMessage question={m.question} reply={m.reply}/>
+               
+              </>}
               </Box>
             </Box>
 

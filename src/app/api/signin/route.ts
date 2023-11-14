@@ -8,7 +8,7 @@ import crypto  from "crypto";
 import expiredAt from "../../../utils/expirydate";
 
 const DDB_TABLE = process.env.NEXT_PUBLIC_DDB_TABLE||"bedrock-claude-codecoach-users";
-const AWS_REGION = process.env.NEXT_PUBLIC_AWS_REGION ||"us-west-2"
+const AWS_REGION = process.env.NEXT_PUBLIC_AWS_REGION ||"us-east-1"
 
 console.log(process.env.NEXT_PUBLIC_DDB_TABLE)
 
@@ -18,14 +18,14 @@ interface User{
 }
 
 async function queryUsers(email: string) {
-  
-  const client = new DynamoDBClient({ region: AWS_REGION  }); 
+
+  const client = new DynamoDBClient({ region: AWS_REGION  });
 
   const params = {
     TableName: DDB_TABLE,
     KeyConditionExpression: "email = :email",
     ExpressionAttributeValues: {
-      ":email": { S: email }  
+      ":email": { S: email }
     }
   };
 
@@ -36,9 +36,9 @@ async function queryUsers(email: string) {
   return results.Items;
 }
 
-export async function POST(req:NextRequest){    
+export async function POST(req:NextRequest){
   const unauthRes=NextResponse.json({"status":"Bad Request"},{ status: 401 })
-  try { 
+  try {
     const user: User= await req.json()
 
     const foundUsers = await queryUsers(user.email);
@@ -59,10 +59,10 @@ export async function POST(req:NextRequest){
   } catch (error) {
     return  unauthRes
   }
-  
-  
-  
 
-  
+
+
+
+
 }
 

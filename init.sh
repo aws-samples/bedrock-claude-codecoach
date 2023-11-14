@@ -7,7 +7,7 @@ init(){
   yum install -y git nodejs.x86_64 docker jq
   npm install yarn -g
   systemctl start docker
-  docker compose --version > /dev/null 2>&1
+  docker compose > /dev/null 2>&1
   if [ $? -gt 0 ]; then
       curl -L https://download.docker.com/linux/centos/7/x86_64/stable/Packages/docker-compose-plugin-2.6.0-3.el7.x86_64.rpm -o ./compose-plugin.rpm
       yum install ./compose-plugin.rpm -y
@@ -80,7 +80,7 @@ build_image(){
 
 start(){
  #. ~/.venv/bin/activate
- cd ~/bedrock-claude-codecoach &&  docke compose up -d
+ cd ~/bedrock-claude-codecoach &&  docker compose up -d
 }
 
 stop(){

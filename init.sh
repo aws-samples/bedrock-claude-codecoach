@@ -54,7 +54,7 @@ add_users(){
           --provisioned-throughput \
               ReadCapacityUnits=5,WriteCapacityUnits=5
   fi
-  password_hash=$(echo -n $password | openssl dgst -sha1 -hex | sed 's/^.* //')
+  password_hash=$(echo -n $password | openssl dgst -sha256 -hex | sed 's/^.* //')
   role=$(expr ${role} == "admin"?"admin":"guest")
   aws dynamodb put-item \
       --table-name bedrock-claude-codecoach-users \
@@ -98,6 +98,7 @@ add_runtime(){
 
   cd ~/piston
   if $(curl -s http://127.0.0.1:2000 | grep -q "Piston");then
+    # curl -XPOST -H"Content-Type:application/json" http://127.0.0.1:2000/api/v2/packages -d'{"language":"python","version":"3.10.0"}'
     cli/index.js --piston-url http://127.0.0.1:2000  ppman install $runtime
   else
     echo "add runtime failed, piston service not running"

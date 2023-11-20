@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const user: User = await req.json();
-    console.log(`User email : ${user.email}, pass : ${user.password}`);
+    // console.log(`User email : ${user.email}, pass : ${user.password}`);
 
     const existUsers = await queryUsers(user.email);
 

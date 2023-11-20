@@ -8,14 +8,12 @@ import expiredAt from "../../../utils/expirydate";
 const DDB_TABLE = process.env.NEXT_PUBLIC_DDB_TABLE||"bedrock-claude-codecoach-users";
 const AWS_REGION = process.env.NEXT_PUBLIC_AWS_REGION ||"us-east-1"
 
-
 interface User {
   email: string;
   password: string;
 }
 
 async function queryUsers(email: string) {
-
   // 创建 DynamoDB 客户端
   const client = new DynamoDBClient({ region: AWS_REGION });
 

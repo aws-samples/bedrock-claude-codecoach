@@ -80,6 +80,7 @@ build_image(){
 
 start(){
  #. ~/.venv/bin/activate
+ # cd ~/bedrock-claude-codecoach &&  docker compose up codecoach -d
  cd ~/bedrock-claude-codecoach &&  docker compose up -d
 }
 
@@ -92,6 +93,8 @@ add_runtime(){
   runtime=$1
   cd ~
   if [ ! -d ./piston ];then
+    # git clone https://github.com/yanjun-ios/piston
+    # docker compose up api -d
     git clone 'https://github.com/engineer-man/piston.git'
     cd piston/cli && npm i
   fi

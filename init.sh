@@ -80,22 +80,33 @@ build_image(){
 
 start(){
  #. ~/.venv/bin/activate
- # cd ~/bedrock-claude-codecoach &&  docker compose up codecoach -d
- cd ~/bedrock-claude-codecoach &&  docker compose up -d
+  cd ~/bedrock-claude-codecoach &&  docker compose up codecoach -d
+  cd ~
+  if [ ! -d ./piston ];then
+     git clone https://github.com/yanjun-ios/piston
+     cd piston && docker compose up api -d
+    # git clone 'https://github.com/engineer-man/piston.git'
+    cd piston/cli && npm i
+  fi
+# cd ~/bedrock-claude-codecoach &&  docker compose up -d
 }
 
 stop(){
  #. ~/.venv/bin/activate
- cd ~/bedrock-claude-codecoach &&  docker compose down
+ cd ~/bedrock-claude-codecoach &&  docker compose stop codecoach
+ cd ~
+ if [ -d ./piston ];then
+    cd ./piston && docker compose stop api
+ fi
 }
 
 add_runtime(){
   runtime=$1
   cd ~
   if [ ! -d ./piston ];then
-    # git clone https://github.com/yanjun-ios/piston
-    # docker compose up api -d
-    git clone 'https://github.com/engineer-man/piston.git'
+     git clone https://github.com/yanjun-ios/piston
+     cd piston && docker compose up api -d
+    # git clone 'https://github.com/engineer-man/piston.git'
     cd piston/cli && npm i
   fi
 

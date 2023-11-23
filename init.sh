@@ -86,7 +86,7 @@ start(){
      git clone https://github.com/yanjun-ios/piston
      cd piston && docker compose up api -d
      # git clone 'https://github.com/engineer-man/piston.git'
-     cd piston/cli && npm i && npm install nocamel axios yargs chalk@4.1.2 ws minimatch semver
+     cd cli && npm i
   fi
 # cd ~/bedrock-claude-codecoach &&  docker compose up -d
 }
@@ -107,7 +107,7 @@ add_runtime(){
      git clone https://github.com/yanjun-ios/piston
      cd piston && docker compose up api -d
      # git clone 'https://github.com/engineer-man/piston.git'
-     cd piston/cli && npm i && npm install nocamel axios yargs chalk@4.1.2 ws minimatch semver
+     cd cli && npm i
   fi
 
   cd ~/piston

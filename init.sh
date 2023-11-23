@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -x
+#set -x
 
 init(){
   cd ~
@@ -55,7 +55,7 @@ add_users(){
               ReadCapacityUnits=5,WriteCapacityUnits=5
   fi
   password_hash=$(echo -n $password | openssl dgst -sha256 -hex | sed 's/^.* //')
-  role=$(expr ${role} == "admin"?"admin":"guest")
+#  role=$(expr ${role} == "admin"?"admin":"guest")
   aws dynamodb put-item \
       --table-name bedrock-claude-codecoach-users \
       --item \
@@ -84,10 +84,10 @@ start(){
   cd ~
   if [ ! -d ./piston ];then
      git clone https://github.com/yanjun-ios/piston
-     cd piston && docker compose up api -d
      # git clone 'https://github.com/engineer-man/piston.git'
-     cd cli && npm i
+     cd piston/cli && npm i
   fi
+  cd ~/piston && docker compose up api -d
 # cd ~/bedrock-claude-codecoach &&  docker compose up -d
 }
 
@@ -113,6 +113,7 @@ add_runtime(){
   cd ~/piston
   if $(curl -s http://127.0.0.1:2000 | grep -q "Piston");then
     # curl -XPOST -H"Content-Type:application/json" http://127.0.0.1:2000/api/v2/packages -d'{"language":"python","version":"3.10.0"}'
+    echo "Installing $runtime ..."
     cli/index.js --piston-url http://127.0.0.1:2000  ppman install $runtime
   else
     echo "add runtime failed, piston service not running"

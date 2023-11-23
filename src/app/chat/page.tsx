@@ -55,7 +55,7 @@ interface ChatMessage {
 }
 
 
-const SUPPORTED_LANGUAGES = ["python","php","lua","typescript","go","awscli","sqlite3","sql","rust"]
+const SUPPORTED_LANGUAGES = ["python","php","lua","typescript","go","awscli","sqlite3","sql","rust","bash"]
 
 
 const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || '';
@@ -64,9 +64,9 @@ function supported(language) {
   return SUPPORTED_LANGUAGES.includes(language)
 }
 function languageChoice(language){
-  if (language==="bash"){
-    return "awscli"
-  }
+  // if (language==="bash"){
+  //   return "awscli"
+  // }
 
   if (language==="sql"){
     return "sqlite3"
@@ -78,7 +78,7 @@ function languageChoice(language){
 function getBashMarkdown(text: string) {
   const regex = /```bash([\s\S]*?)```/;
   const match = text.match(regex);
-  const result= match ? match[0] : ''; 
+  const result= match ? match[0] : '';
   return result.replace('```bash','').replace('```','')
 }
 
@@ -123,7 +123,7 @@ export default function Chat() {
 const onExecute = (code:string,question:string) => {
 
   console.log(code)
-  
+
 
   //onClose();
 
@@ -190,7 +190,7 @@ const onExecute = (code:string,question:string) => {
      if (runResultValue!=""){
       setInputValue(runResultValue)
       sendMessage(runResultValue)
-      
+
      }
      return ()=>{setRunResult("")}
 
@@ -361,7 +361,7 @@ const onExecute = (code:string,question:string) => {
         }
         scrollToBottom()
       }
-     
+
     } catch (error) {
       setAiThinking(false);
       console.log(error);
@@ -409,7 +409,7 @@ const onExecute = (code:string,question:string) => {
 
               </Flex>
               <Box mt="20px"><CleanMessagesByIndex index={index} cleanMessageByIndxe={removeMessageByIndex} />
-              
+
               <Icon as={BsRobot} boxSize="24px" color={rebotoColor()}/>{aiThinking&&<Spinner size='sm'/>} {!aiThinking&&m.costToken&&<Button leftIcon={<BiDollarCircle />} variant='solid' size={"xs"}>Token Cost : {m.costToken}</Button>}
               </Box>
               <Box ml="30px"  >
@@ -443,7 +443,7 @@ const onExecute = (code:string,question:string) => {
                 />
               {authSettingsValue.aiRole==="OPSCOACH"&&!aiThinking&&<>
               <ContinueMessage question={m.question} reply={m.reply}/>
-               
+
               </>}
               </Box>
             </Box>
@@ -500,9 +500,9 @@ const onExecute = (code:string,question:string) => {
           w="70vw"
           ml={"20px"}
         />
-        
+
       </Flex>
-      
+
     </Flex>
   )
 }

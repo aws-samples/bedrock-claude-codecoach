@@ -7,7 +7,7 @@ const pistonURL = process.env.NETX_PUBLIC_PISTON_SERVER_URL || 'http://api:2000'
 const pistonRunTimeout = process.env.NETX_PUBLIC_PISTON_RUN_TIMEOUT || 10000;
 const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || ''
 
-const SUPPORTED_LANGUAGES = ["python","php","lua","typescript","go","awscli","sqlite3","rust"]
+const SUPPORTED_LANGUAGES = ["python","php","lua","typescript","go","awscli","sqlite3","rust","bash"]
 
 async function PostAction(payload: {
   history: any[]
@@ -17,16 +17,16 @@ async function PostAction(payload: {
 
   try {
     console.log(payload)
-    
+
     const response = await fetch(`${baseURL}/api/bedrock/completion`, {
-      method: 'POST', 
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer eyJhdXRoVHlwZSI6IklBTVJPTEUiLCJha1ZhbHVlIjoiIiwic2tWYWx1ZSI6IiIsImNvZ25pdG9JRFZhbHVlIjoiIiwiY29nbml0b1JlZ2lvblZhbHVlIjoidXMtZWFzdC0xIiwiYWlSb2xlIjoiT1BTQ09BQ0gifQ==`
       },
-      body: JSON.stringify(payload)  
+      body: JSON.stringify(payload)
     })
-    
+
     const context= await response.text()
     return context
 
@@ -39,35 +39,35 @@ async function PostAction(payload: {
 
 /**
  * POST handler for API route
- * 
+ *
  * @param {NextRequest} req - The request object
  */
 export async function POST(req: NextRequest) {
   try {
-    
+
     const {code,language,question}=await req.json()
-    
+
     console.log(code,language,pistonRunTimeout)
 
     if (!SUPPORTED_LANGUAGES.includes(language)){
       const res=NextResponse.json({"status":"runtime not exits "},{status:500})
       return res
     }
-    
+
     const stream = new TransformStream();
-  
+
     const result= await (async () => {
 
       const client = piston({ server: pistonURL });
-      
+
       const runtimes = await client.runtimes();
       console.log(runtimes);
-     
+
       const result = await client.execute({
         language: language,
         runTimeout: 15000,
       }, code);
-      
+
       if (result.run?.stderr===""&& result.run?.stdout!==""&&question){
         console.log("PostAction invoke")
         const answer= await PostAction({"history":[`${result.run.stdout}`],query:`${question}`, role:"AWSCLIEXPRT"})
@@ -75,9 +75,9 @@ export async function POST(req: NextRequest) {
         return {run:{answer:answer}}
       }
       return result
-  
+
   })();
-    
+
   const res=NextResponse.json(result)
   return res
   } catch (error) {
@@ -87,4 +87,4 @@ export async function POST(req: NextRequest) {
 };
 
 
-  
+

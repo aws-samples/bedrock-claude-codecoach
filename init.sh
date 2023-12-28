@@ -7,7 +7,7 @@ init(){
   yum install -y git nodejs.x86_64 docker jq
   npm install yarn -g
   systemctl start docker
-  docker compose --version > /dev/null 2>&1
+  docker compose > /dev/null 2>&1
   if [ $? -gt 0 ]; then
       curl -L https://download.docker.com/linux/centos/7/x86_64/stable/Packages/docker-compose-plugin-2.6.0-3.el7.x86_64.rpm -o ./compose-plugin.rpm
       yum install ./compose-plugin.rpm -y
@@ -54,8 +54,8 @@ add_users(){
           --provisioned-throughput \
               ReadCapacityUnits=5,WriteCapacityUnits=5
   fi
-  password_hash=$(echo -n $password | openssl dgst -sha1 -hex | sed 's/^.* //')
-  role=$(expr ${role} == "admin"?"admin":"guest")
+  password_hash=$(echo -n $password | openssl dgst -sha256 -hex | sed 's/^.* //')
+#  role=$(expr ${role} == "admin"?"admin":"guest")
   aws dynamodb put-item \
       --table-name bedrock-claude-codecoach-users \
       --item \
@@ -80,7 +80,7 @@ build_image(){
 
 start(){
  #. ~/.venv/bin/activate
- cd ~/bedrock-claude-codecoach &&  docke compose up -d
+ cd ~/bedrock-claude-codecoach &&  docker compose up -d
 }
 
 stop(){
@@ -98,6 +98,7 @@ add_runtime(){
 
   cd ~/piston
   if $(curl -s http://127.0.0.1:2000 | grep -q "Piston");then
+    # curl -XPOST -H"Content-Type:application/json" http://127.0.0.1:2000/api/v2/packages -d'{"language":"python","version":"3.10.0"}'
     cli/index.js --piston-url http://127.0.0.1:2000  ppman install $runtime
   else
     echo "add runtime failed, piston service not running"

@@ -55,7 +55,7 @@ add_users(){
               ReadCapacityUnits=5,WriteCapacityUnits=5
   fi
   password_hash=$(echo -n $password | openssl dgst -sha256 -hex | sed 's/^.* //')
-  role=$(expr ${role} == "admin"?"admin":"guest")
+#  role=$(expr ${role} == "admin"?"admin":"guest")
   aws dynamodb put-item \
       --table-name bedrock-claude-codecoach-users \
       --item \

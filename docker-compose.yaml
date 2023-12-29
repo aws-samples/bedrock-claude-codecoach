@@ -9,6 +9,11 @@ services:
             - 2000:2000
         volumes:
             - ./data/piston/packages:/piston/packages
+        environment:
+            #- PISTON_REPO_URL=
+            - PISTON_DISABLE_NETWORKING=false
+            - PISTON_RUN_TIMEOUT=300000
+            - PISTON_OUTPUT_MAX_SIZE=102400
         tmpfs:
             - /piston/jobs:exec,uid=1000,gid=1000,mode=711
             - /tmp:exec

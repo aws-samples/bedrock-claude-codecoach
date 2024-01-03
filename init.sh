@@ -1,6 +1,6 @@
 #!/bin/sh
 
-set -x
+#set -x
 
 init(){
   cd ~
@@ -80,25 +80,40 @@ build_image(){
 
 start(){
  #. ~/.venv/bin/activate
- cd ~/bedrock-claude-codecoach &&  docker compose up -d
+  cd ~/bedrock-claude-codecoach &&  docker compose up codecoach -d
+  cd ~
+  if [ ! -d ./piston ];then
+     git clone https://github.com/yanjun-ios/piston
+     # git clone 'https://github.com/engineer-man/piston.git'
+     cd piston/cli && npm i
+  fi
+  cd ~/piston && docker compose up api -d
+# cd ~/bedrock-claude-codecoach &&  docker compose up -d
 }
 
 stop(){
  #. ~/.venv/bin/activate
- cd ~/bedrock-claude-codecoach &&  docker compose down
+ cd ~/bedrock-claude-codecoach &&  docker compose stop codecoach
+ cd ~
+ if [ -d ./piston ];then
+    cd ./piston && docker compose stop api
+ fi
 }
 
 add_runtime(){
   runtime=$1
   cd ~
   if [ ! -d ./piston ];then
-    git clone 'https://github.com/engineer-man/piston.git'
-    cd piston/cli && npm i
+     git clone https://github.com/yanjun-ios/piston
+     cd piston && docker compose up api -d
+     # git clone 'https://github.com/engineer-man/piston.git'
+     cd cli && npm i
   fi
 
   cd ~/piston
   if $(curl -s http://127.0.0.1:2000 | grep -q "Piston");then
     # curl -XPOST -H"Content-Type:application/json" http://127.0.0.1:2000/api/v2/packages -d'{"language":"python","version":"3.10.0"}'
+    echo "Installing $runtime ..."
     cli/index.js --piston-url http://127.0.0.1:2000  ppman install $runtime
   else
     echo "add runtime failed, piston service not running"
@@ -119,11 +134,12 @@ if [ $# -eq 0 ];then
       add_users "guest@demo.com" "123456" "guest"
       start
       sleep 10s
+      add_runtime bash=5.2.0
       add_runtime python=3.10.0
-      add_runtime node
-      add_runtime go
-      add_runtime php
-      add_runtime typescript
+      add_runtime node=18.15.0
+      add_runtime go=1.20.11
+      add_runtime php=8.2.3
+      add_runtime typescript=5.0.3
 else
   while getopts ":struh" opt; do
     case $opt in

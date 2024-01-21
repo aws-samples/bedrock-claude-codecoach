@@ -102,7 +102,7 @@ export default function Navbar() {
           justify={'flex-end'}
           direction={'row'}
           spacing={6}>
-
+          
           <Button fontSize={'sm'} fontWeight={400} variant={'link'} >
           {isClient&&(auth?.user??"")}
           </Button>
@@ -116,6 +116,9 @@ export default function Navbar() {
           justify={'flex-end'}
           direction={'row'}
           spacing={6}>
+
+
+            
           
           {isClient&&!auth&&
           <Link href="/signin">
@@ -304,8 +307,12 @@ const NAV_ITEMS: Array<NavItem> = [
     href: '/chat',
   },
   {
-    label: 'Changelog',
-    href: '#'
+    label: 'Prompt Editor',
+    href: '/prompt'
+  },
+  {
+    label: 'Github',
+    href: 'https://github.com/aws-samples/bedrock-claude-codecoach'
   },
   
 ]

@@ -1,41 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { DynamoDBClient, QueryCommand } from "@aws-sdk/client-dynamodb";
 import sha256 from "crypto-js/sha256";
 
-import expiredAt from "../../../utils/expirydate";
+import expiredAt from "@utils/expirydate";
+import { QuerySignUsers } from "@utils/ddb";
 
-const DDB_TABLE =
-  process.env.NEXT_PUBLIC_DDB_TABLE || "bedrock-claude-codecoach-users";
-const AWS_REGION = process.env.NEXT_PUBLIC_AWS_REGION || "us-west-2";
 
 interface User {
   email: string;
   password: string;
 }
 
-async function queryUsers(email: string) {
-  // 创建 DynamoDB 客户端
-  const client = new DynamoDBClient({ region: AWS_REGION });
 
-  // 构造查询参数
-  const params = {
-    TableName: DDB_TABLE,
-    KeyConditionExpression: "email = :value",
-    ExpressionAttributeValues: {
-      ":value": { S: email },
-    },
-  };
 
-  // 创建 QueryCommand 实例
-  const command = new QueryCommand(params);
-
-  // 使用 execute 方法执行查询
-  const results = await client.send(command);
-
-  return results.Items;
-}
-
+/**
+ * POST handler for API route
+ * 
+ * @param {NextRequest} req - The request object
+ */
 export async function POST(req: NextRequest) {
   const unAuthRes = NextResponse.json(
     { error: "Bad Request" },
@@ -44,17 +25,16 @@ export async function POST(req: NextRequest) {
 
   try {
     const user: User = await req.json();
-    // console.log(`User email : ${user.email}, pass : ${user.password}`);
-
-    const existUsers = await queryUsers(user.email);
+   
+    const existUsers = await QuerySignUsers(user.email);
 
     const hashDigest = sha256(user.password);
-    console.log(`hashDigest : ${hashDigest}`);
+    
 
     if (existUsers.length > 0) {
       const existUser = existUsers[0];
       console.log(
-        `Exist User : ${existUser.email.S}, ${existUser.password.S}, ${existUser.role.S}, `
+        `Exist User : ${existUser.PK.S}, ${existUser.password.S}, ${existUser.role.S}, `
       );
 
       if (existUser.password.S == hashDigest) {

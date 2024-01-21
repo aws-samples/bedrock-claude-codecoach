@@ -38,29 +38,29 @@ const ExecuteCodeButton = ({language,code,setCode}:ExcuteCodeProps) => {
     setCode(currentCode)
   }
 
-  const onExecute = () => {
+  const onExecute =async () => {
 
     console.log(language,code)
     setLoading(true)
 
-    //onClose();
-
-    fetchRequestCode("POST", `${baseURL}/api/execute`, {
+    try {
+      const res = await fetchRequestCode("POST", `${baseURL}/api/execute`, {
         language: language,
         code: currentCode
-      })
-        .then((res) => res.text())
-        .then((body) => {
-          const {run }=JSON.parse(body);
-
-          if(run){
-            if(run.stderr!==""){
-              setErrorMessage(`language: ${language}\n code: ${currentCode}\n stdout: ${run.stdout} \nstderr: ${run.stderr}, please fix this issue \n`)
-            }
-            setOutput(`stdout: ${run.stdout} \nstderr: ${run.stderr} \n`);
-          }
-
-        }).finally(()=>{ setLoading(false)});
+      });
+  
+      const { run }= await res.json();
+      if (run) {
+        if (run.stderr !== "") {
+          setErrorMessage(`language: ${language}\n code: ${currentCode}\n stdout: ${run.stdout} \nstderr: ${run.stderr}, please fix this issue \n`);
+        }
+        setOutput(`stdout: ${run.stdout} \nstderr: ${run.stderr} \n`);
+      }
+    } catch (error) {
+      // Handle any errors here
+    } finally {
+      setLoading(false);
+    }
 
   }
   return (

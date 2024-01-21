@@ -9,21 +9,34 @@ interface ChatMessage {
   reply: string
 }
 
-export default async function fetchRequest(method: "GET"|"POST",url: string, accessToken:string, params: { [key: string]: any,history?:ChatMessage[]}  ) {
+export default async function fetchRequest(method: "GET"|"POST"|"DELETE",url: string, accessToken:string, params: { [key: string]: any,history?:ChatMessage[]}  ) {
 
 
-
-  console.log(atob(accessToken),accessToken)
-  console.log(history)
-
-  if (method==="POST"){
+  if (method==="POST"||method==="DELETE"){
     const res = await fetch(url, {
-      method: 'POST',
+      method: method,
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${accessToken}`
       },
       body: JSON.stringify(params)
+    });
+
+
+    if (res.ok) {
+      return res;
+    }
+
+    return Promise.reject(res.statusText);
+  }
+
+  if (method==="GET"){
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      }
     });
 
 
@@ -60,6 +73,8 @@ export  async function fetchRequestCode(method: "GET"|"POST",url: string,  param
 
     return Promise.reject(res.statusText);
   }
+
+
 
   return Promise.reject(`Not support ${method}`);
 }

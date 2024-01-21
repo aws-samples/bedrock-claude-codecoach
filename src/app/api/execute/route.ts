@@ -5,7 +5,7 @@ import piston from "piston-client";
 
 const pistonURL = process.env.NETX_PUBLIC_PISTON_SERVER_URL || 'http://api:2000';
 const pistonRunTimeout = process.env.NETX_PUBLIC_PISTON_RUN_TIMEOUT || 10000;
-const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || ''
+const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || 'http://localhost:3000'
 
 const SUPPORTED_LANGUAGES = ["python","php","lua","typescript","go","awscli","sqlite3","rust","bash"]
 
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
 
       if (result.run?.stderr===""&& result.run?.stdout!==""&&question){
         console.log("PostAction invoke")
-        const answer= await PostAction({"history":[`${result.run.stdout}`],query:`${question}`, role:"AWSCLIEXPRT"})
+        const answer= await PostAction({"history":[`AWS CLI script output: ${result.run.stdout.replace(/\n/g, '')}`],query:`${question}`, role:"AWSCLIEXPRT"})
         console.log(answer)
         return {run:{answer:answer}}
       }

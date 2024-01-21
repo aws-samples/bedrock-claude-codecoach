@@ -47,9 +47,6 @@ const ContinueMessage = ({question,reply}:ChatMessage) => {
 
     console.log(code)
     
-  
-    
-  
     fetchRequestCode("POST", `${baseURL}/api/execute`, {
         language: "awscli",
         code: code,
@@ -80,7 +77,9 @@ const ContinueMessage = ({question,reply}:ChatMessage) => {
                 setMessage("")
                 setIsLoading(true)
                 onExecute(code,question)
-              }}/>
+              }}
+              _hover={{ cursor: 'pointer' }} 
+              />
    {/* <IconButton
               aria-label='goto top'
               right={4}

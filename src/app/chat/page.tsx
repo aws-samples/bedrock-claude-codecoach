@@ -14,13 +14,11 @@ import {
   Box,
   Flex,
   Icon,
-  Input,
   IconButton,
-  Text,
+  Textarea,
   Stack,
   Spinner
 } from '@chakra-ui/react'
-import { InfoIcon } from '@chakra-ui/icons'
 
 import { FaRegCopy } from "react-icons/fa"
 import { BsRobot,BsArrowUpSquare,BsArrowDownSquare } from "react-icons/bs";
@@ -32,42 +30,35 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 
 
+import fetchRequest from '@utils/fetch';
+import {fetchRequestCode} from "@utils/fetch";
+import {countTokens} from "@utils/anthropictoken";
+
+
+import {runResult,authSettings,authState} from "../../state";
+
 
 import CleanMessages, {CleanMessagesByIndex} from "./CleanMessages"
 import ExportMessages from "./ExportMessages"
 import ImportMessages from './ImportMessages';
 import ExecuteCodeButton from "./ExecuteCode"
 import ContinueMessage from "./ContinueMessage";
+import { rebotoColor } from '@components/RobotIconColor';
 
-import fetchRequest from '../../utils/fetch';
-import {fetchRequestCode} from "../../utils/fetch";
-
-import {runResult,authSettings,authState} from "../../state";
-
-
-import {countTokens} from "../../utils/anthropictoken";
-
-
-interface ChatMessage {
-  question: string
-  reply: string
-  costToken?: number
-}
-
-
-const SUPPORTED_LANGUAGES = ["python","php","lua","typescript","go","awscli","sqlite3","sql","rust"]
 
 
 const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || '';
 
+const supportedLanguages=process.env.SUPPORTED_LANGUAGES ||  ["python","php","lua","typescript","go","awscli","sqlite3","sql","rust"]
+
 function supported(language) {
-  return SUPPORTED_LANGUAGES.includes(language)
+  return supportedLanguages.includes(language)
 }
+
 function languageChoice(language){
   if (language==="bash"){
     return "awscli"
   }
-
   if (language==="sql"){
     return "sqlite3"
   }
@@ -75,28 +66,20 @@ function languageChoice(language){
   return language
 }
 
-function getBashMarkdown(text: string) {
-  const regex = /```bash([\s\S]*?)```/;
-  const match = text.match(regex);
-  const result= match ? match[0] : ''; 
-  return result.replace('```bash','').replace('```','')
-}
 
-export default function Chat() {
-  //const [messages, setMessages] = useState<ChatMessage[]>([]);
+const Chat = () => {
   const [messages, setMessages] = useRecoilState(chatMessagesState);
   const authSettingsValue =useRecoilValue (authSettings)
   const auth= useRecoilValue(authState)
-
   const [isClient, setIsClient] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertText,setAlertText] =useState("");
   const [alertStatus,setAlertStatus] =useState("success");
 
   const messagesEnd = useRef<HTMLDivElement>(null);
-  const chatInput = useRef<HTMLInputElement>(null);
+  const chatInput = useRef<HTMLTextAreaElement>(null);
 
-  const [inputValue, setInputValue] = useState('');
+  const [, setInputValue] = useState('');
 
 
   const [aiThinking, setAiThinking] = useState(false);
@@ -106,38 +89,6 @@ export default function Chat() {
   const [runResultValue,setRunResult]=useRecoilState(runResult);
 
 
-  const rebotoColor=()=>{
-    if(authSettingsValue.aiRole=="OPSCOACH"){
-        return isDark?"orange.300":"orange.600"
-    }else if(authSettingsValue.aiRole=="NORMAL"){
-        return isDark?"green.300":"green.600"
-    }else{
-        return isDark?"blue.300":"blue.600"
-    }
-
-  }
-
-
-
-
-const onExecute = (code:string,question:string) => {
-
-  console.log(code)
-  
-
-  //onClose();
-
-  fetchRequestCode("POST", `${baseURL}/api/execute`, {
-      language: "awscli",
-      code: code,
-      question:question
-    })
-      .then((res) => res.text())
-      .then((body) => {
-        console.log(body)
-      })
-
-}
 
 
   const debounced = useDebouncedCallback(
@@ -168,7 +119,6 @@ const onExecute = (code:string,question:string) => {
 
   const clearMessages=()=>{
     setMessages([])
-
   }
 
   const handlerShowAlert=(text:string,status?:string, timeout?:number)=>{
@@ -227,27 +177,20 @@ const onExecute = (code:string,question:string) => {
       }
 
       const updatedMessages = [...pre.slice(0, index), ...pre.slice(index + 1)];
-
       return updatedMessages;
     });
   }
 
   function CodeCopyBtn({ children }: any) {
-    const [copyOk, setCopyOk] = useState(false);
-    const iconColor = copyOk ? '#0af20a' : '#ddd';
-    const icon = copyOk ? 'fa-check-square' : 'fa-copy';
-    const handleClick = (e: any) => {
+   
+    
+    const handleClick = () => {
       navigator.clipboard.writeText(children.props.children);
-      console.log(children.props.children)
-
-      setCopyOk(true);
       setShowAlert(true);
       setAlertText("The code has been copied to the clipboard!")
       setTimeout(() => {
-        setCopyOk(false);
         setShowAlert(false);
       }, 3000);
-
     }
     return (
       <div className="code-copy-btn"
@@ -269,21 +212,7 @@ const onExecute = (code:string,question:string) => {
  }
 
   function CodeExecuteBtn({ children, language,setChildren}: CodeExecuteBtnProps) {
-    const [copyOk, setCopyOk] = useState(false);
-
-    const iconColor = copyOk ? '#0af20a' : '#ddd';
-    const icon = copyOk ? 'fa-check-square' : 'fa-copy';
-    const handleClick = (e: any) => {
-      console.log(children,language)
-
-      setCopyOk(true);
-
-      setTimeout(() => {
-        setCopyOk(false);
-        setShowAlert(false);
-      }, 3000);
-
-    }
+    
     return (
       <div className="code-copy-btn"
         style={{
@@ -318,17 +247,12 @@ const onExecute = (code:string,question:string) => {
       let isMindmap: boolean = false;
       const history = messages.slice(-5)
 
-      if(auth.role==="guest"&&authSettingsValue.authType==="IAMROLE"){
-        console.log("Need setup auth")
-        setAiThinking(false);
-        handlerShowAlert("Need setup auth","error")
-        return
-      }
 
       res = await fetchRequest("POST",`${baseURL}/api/bedrock/completion`, btoa(JSON.stringify(authSettingsValue)), {
         query: value,
         history: history,
         role: authSettingsValue.aiRole,
+        roleType: authSettingsValue.roleType,
 
       }  );
       if (res.status!==200){
@@ -357,7 +281,14 @@ const onExecute = (code:string,question:string) => {
 
         } else {
           console.log(chunkValue);
-          updateMessageList(chunkValue)
+          if (authSettingsValue.aiRole==="AUTOGEN"){
+            if (chunkValue.indexOf("user_proxy")===-1&&chunkValue.trim().endsWith("TERMINATE")===false){
+              updateMessageList(chunkValue)
+              updateMessageList("")
+            }
+          }else{
+            updateMessageList(chunkValue)
+          }
         }
         scrollToBottom()
       }
@@ -368,6 +299,8 @@ const onExecute = (code:string,question:string) => {
 
     }
   };
+
+
 
   return (
     <Flex direction="column" h="85vh" align="center" overflow={"hidden"}>
@@ -401,7 +334,8 @@ const onExecute = (code:string,question:string) => {
 
               <Flex alignContent={"right"} justifyContent={"right"}>
                 <Box p='2' bg={isDark?"blue.400":"gray.100"} rounded={"8px"}>
-                  {m.question}
+               
+                <ReactMarkdown>{m.question}</ReactMarkdown>
                 </Box>
                 <Box p='2' >
                   You
@@ -410,7 +344,7 @@ const onExecute = (code:string,question:string) => {
               </Flex>
               <Box mt="20px"><CleanMessagesByIndex index={index} cleanMessageByIndxe={removeMessageByIndex} />
               
-              <Icon as={BsRobot} boxSize="24px" color={rebotoColor()}/>{aiThinking&&<Spinner size='sm'/>} {!aiThinking&&m.costToken&&<Button leftIcon={<BiDollarCircle />} variant='solid' size={"xs"}>Token Cost : {m.costToken}</Button>}
+              <Icon as={BsRobot} boxSize="24px" color={rebotoColor(isDark,authSettingsValue.roleType,authSettingsValue.aiRole)} />{aiThinking&&<Spinner size='sm'/>} {!aiThinking&&m.costToken&&<Button leftIcon={<BiDollarCircle />} variant='solid' size={"xs"}>Token Cost : {m.costToken}</Button>}
               </Box>
               <Box ml="30px"  >
                 <ReactMarkdown
@@ -441,7 +375,7 @@ const onExecute = (code:string,question:string) => {
                     }
                   }}
                 />
-              {authSettingsValue.aiRole==="OPSCOACH"&&!aiThinking&&<>
+              {authSettingsValue.aiRole==="AWSCLICOACH"&&!aiThinking&&<>
               <ContinueMessage question={m.question} reply={m.reply}/>
                
               </>}
@@ -481,7 +415,26 @@ const onExecute = (code:string,question:string) => {
         justifyContent={"center"}
         p={8}
       >
-        <Input
+        <Textarea
+                   ref={ chatInput }
+                  placeholder={`Enter here ......`}
+                  ml="-50px"
+                  size="md"
+                  resize="none"
+                  rows={3}
+                  w="70vw"
+                  variant="brandPrimary"
+                  onChange={(e) => debounced(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (chatInput.current&&chatInput.current.value){
+                        sendMessage(chatInput.current.value);
+                        chatInput.current.value="";
+                      }
+                    }
+                  }}
+                />
+        {/* <Input
           ref={ chatInput }
           size="md"
           placeholder="Enter message"
@@ -499,10 +452,13 @@ const onExecute = (code:string,question:string) => {
           }}
           w="70vw"
           ml={"20px"}
-        />
+        /> */}
         
       </Flex>
       
     </Flex>
   )
 }
+
+
+export default Chat;

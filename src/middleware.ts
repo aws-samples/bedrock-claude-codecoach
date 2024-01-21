@@ -3,17 +3,25 @@ import { NextRequest ,NextResponse } from "next/server";
 
 
 // Define protected routes that require authentication
-const protectedRoutes = ["/chat"];
+const protectedRoutes = ["/chat","/prompt"];
+const protectedAPIRoutes =["/api/prompt","/api/caller","/api/execute","/api/beckrock/completion","/api/autogen/completion"]
 
 // Define authentication routes that should redirect if user is already logged in  
 const authRoutes = ["/signin"];
-
 
 
 export function middleware(request: NextRequest) {
   // Get current user cookie if it exists
   const currentUser = request.cookies.get("auth")?.value;
   
+  // If trying to access protected API route without being logged in, return 403
+  if (
+    protectedAPIRoutes.includes(request.nextUrl.pathname) &&
+    (!currentUser || Date.now() > JSON.parse(currentUser).expiredAt)
+  ){
+    return new Response("BAD Request", { status: 403 }); 
+  }
+
   // If trying to access protected route without being logged in, redirect to sign in
   if (
     protectedRoutes.includes(request.nextUrl.pathname) &&

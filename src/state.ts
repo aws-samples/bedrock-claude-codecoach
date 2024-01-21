@@ -5,11 +5,18 @@ import { atom } from "recoil";
 import { recoilPersist } from 'recoil-persist'
 const { persistAtom } = recoilPersist()
 
+
 interface ChatMessage {
     question: string;
     reply: string;
     costToken?:number;
   }
+
+interface PromptTemplate {
+    name: string;
+    promptTemplate: string;
+}
+
 
 const nameState =atom({
     key: 'nameState',
@@ -29,18 +36,31 @@ const runResult =atom({
   default: '',
 })
 
+const promptEditorResult =atom({
+  key: 'promptEditorResult',
+  default: '',
+  effects_UNSTABLE: [persistAtom]
+})
+
 
 const authSettings =atom({
   key: 'authSettings',
-  default: {"authType":"IAMROLE","akValue":"","skValue":"","cognitoIDValue":"","cognitoRegionValue":"us-east-1","aiRole":"CODECOACH"},
+  default: {"authType":"IAMROLE","aiRole":"CODECOACH","roleType":"system"},
 })
 
 
   
-export const chatMessagesState = atom<ChatMessage[]>({
+const chatMessagesState = atom<ChatMessage[]>({
     key: 'chatMessagesState',
     default: [],
     effects_UNSTABLE: [persistAtom]
   });
 
-export {nameState, authState,runResult,authSettings}
+const promptTemplateState = atom<PromptTemplate[]>({
+    key: 'promptTemplateState',
+    default: [],
+    effects_UNSTABLE: [persistAtom]
+  });
+
+
+export {nameState, authState,runResult,authSettings,chatMessagesState,promptEditorResult, promptTemplateState}

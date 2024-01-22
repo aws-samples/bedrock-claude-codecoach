@@ -32,11 +32,19 @@ CodeCoach Vimeo link:
 
 
 
+
+Prompt Editor 
+
+![prompteditor](./images/prompteditor.png)
+
+
 ## Features and Roadmap
 
 - [x] Authentication (Sign-up, Sign-in)
 
-- [x] IAM Role, AK/SK, Cognito identity support  
+- [x] IAM Role support  
+
+- [x] Prompt Editor
 
 - [ ] Docker Image 
 

@@ -9,7 +9,7 @@ interface ChatMessage {
   reply: string
 }
 
-export default async function fetchRequest(method: "GET"|"POST"|"DELETE",url: string, accessToken:string, params: { [key: string]: any,history?:ChatMessage[]}  ) {
+const fetchRequest = async (method: "GET"|"POST"|"DELETE",url: string, accessToken:string, params: { [key: string]: any,history?:ChatMessage[]}  )=> {
 
 
   if (method==="POST"||method==="DELETE"){
@@ -78,3 +78,6 @@ export  async function fetchRequestCode(method: "GET"|"POST",url: string,  param
 
   return Promise.reject(`Not support ${method}`);
 }
+
+
+export default fetchRequest;

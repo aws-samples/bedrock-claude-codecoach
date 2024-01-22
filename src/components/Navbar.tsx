@@ -167,6 +167,7 @@ const DesktopNav = () => {
                 fontSize={'sm'}
                 fontWeight={500}
                 color={linkColor}
+                target={navItem.isExternal ? '_blank' : undefined}
                 _hover={{
                   textDecoration: 'none',
                   color: linkHoverColor,
@@ -295,6 +296,7 @@ interface NavItem {
   subLabel?: string
   children?: Array<NavItem>
   href?: string
+  isExternal?:boolean
 }
 
 const NAV_ITEMS: Array<NavItem> = [
@@ -312,7 +314,8 @@ const NAV_ITEMS: Array<NavItem> = [
   },
   {
     label: 'Github',
-    href: 'https://github.com/aws-samples/bedrock-claude-codecoach'
+    href: 'https://github.com/aws-samples/bedrock-claude-codecoach',
+    isExternal: true
   },
   
 ]

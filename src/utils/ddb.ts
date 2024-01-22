@@ -10,19 +10,18 @@ function generateSHA1(str: string): string {
 }
 
 
-
-const client = new DynamoDBClient(AWSConfig())
-
-
-const userTableName = "bedrock-claude-codecoach";
 const dynamodbTableName =
   process.env.NEXT_PUBLIC_DDB_TABLE || "bedrock-claude-codecoach";
+const client = new DynamoDBClient(AWSConfig())
 
-async function QuerySignUsers(email: string) {
-    
+/**
+ * Queries DynamoDB table for users matching given email.
+ * 
+ * @param {string} email - Email address to query users by
+ * @returns {Object[]} Array of matched user objects
+ */
+const QuerySignUsers = async (email: string) => {
     console.log("QuerySignUsers invoke")
-  
-    // 构造查询参数
     const params = {
       TableName: dynamodbTableName,
       KeyConditionExpression: "PK = :value",
@@ -31,18 +30,21 @@ async function QuerySignUsers(email: string) {
       },
     };
   
-    // 创建 QueryCommand 实例
     const command = new QueryCommand(params);
-  
-    // 使用 execute 方法执行查询
     const results = await client.send(command);
-  
     return results.Items;
   }
 
 
 
-
+/**
+ * Generates a DynamoDB item for storing a prompt.
+ * 
+ * @param {string} email - User email address
+ * @param {string} name - User name
+ * @param {string} prompt - Prompt text
+ * @returns {Object} DynamoDB item object
+ */
 const GeneratePrompt = (email: string, name:string, prompt:string) => {
     return {
         
@@ -53,13 +55,26 @@ const GeneratePrompt = (email: string, name:string, prompt:string) => {
     };
 }
 
+/**
+ * Creates a prompt item in DynamoDB.
+ * 
+ * @param {string} email - User email address 
+ * @param {string} name - User name
+ * @param {string} prompt - Prompt text
+ * @returns {Object} Created DynamoDB item
+ */
 const CreatePrompt =async (email: string, name:string, prompt :string) => {
     const item = GeneratePrompt(email, name,prompt);
     PutItem(dynamodbTableName, item);
     return dynamoDBToJSON(item);
 }
 
-
+/**
+ * Deletes a prompt item from DynamoDB.
+ * 
+ * @param {string} owner - User email address 
+ * @param {string} promptID - Unique ID of prompt to delete
+ */
 const DeletePrompt = async (owner:string, promptID:string) =>{
     const params = {
         TableName: dynamodbTableName,
@@ -72,7 +87,12 @@ const DeletePrompt = async (owner:string, promptID:string) =>{
     return client.send(command);
 }
 
-
+/**
+ * Adds an item to a DynamoDB table.
+ *
+ * @param {string} tableName - Name of DynamoDB table
+ * @param {Object} item - Item to add 
+ */
 const PutItem = async (tableName:string,item: Record<string, AttributeValue>) => {
     try {
         const putCommand = new PutItemCommand({
@@ -86,8 +106,13 @@ const PutItem = async (tableName:string,item: Record<string, AttributeValue>) =>
     }
 }
 
+/**
+ * Queries prompts for a user email address.
+ * 
+ * @param {string} email - User email address to query prompts for
+ * @returns {Object[]} Array of matched prompt objects
+ */
 const QueryPrompt = async (email: string) => {
-    console.log(dynamodbTableName)
     const command = new QueryCommand({
         TableName: dynamodbTableName,
         IndexName: "SK-index", 
@@ -100,9 +125,13 @@ const QueryPrompt = async (email: string) => {
     return response.Items.map(dynamoDBToJSON);
 }
 
-
+/**
+ * Queries prompts by partition key.
+ *
+ * @param {string} pk - Partition key value to query 
+ * @returns {Object[]} Array of matched prompt objects
+ */ 
 const QueryPromptByPK = async (pk: string) => {
-    console.log(dynamodbTableName)
     const command = new QueryCommand({
         TableName: dynamodbTableName,
         KeyConditionExpression: "PK = :pk",
@@ -114,17 +143,7 @@ const QueryPromptByPK = async (pk: string) => {
     return response.Items.map(dynamoDBToJSON);
 }
 
-const QueryUser = async (email: string) => {
-    const command = new QueryCommand({
-        TableName: "docsummary",
-        KeyConditionExpression: "email = :email",
-        ExpressionAttributeValues: {
-            ":email": { "S": email }
-        }
-    });
-    const response = await client.send(command);
-    return response.Items.map(dynamoDBToJSON);
-}
+
 
 function dynamoDBToJSON(data) {
     const converted = {};
@@ -147,27 +166,6 @@ function dynamoDBToJSON(data) {
     return converted;
 }
 
-const UpdateUser = async (email: string, count: number) => {
-    const updateCommand = new UpdateItemCommand({
-        TableName: userTableName,
-        Key: {
-            email: { S: email }
-        },
-        UpdateExpression: "set #ct = :count",
-        ExpressionAttributeNames: {
-            "#ct": "count"
-        },
-        ExpressionAttributeValues: {
-            ":count": { N: count.toString() }
-        }
-    });
 
-    try {
-        await client.send(updateCommand);
-        console.log("Success - item updated");
-    } catch (error) {
-        console.error("Error - failed to update item:", error);
-    }
-}
 
-export {  QueryUser,QuerySignUsers, PutItem, dynamoDBToJSON, UpdateUser, CreatePrompt,QueryPrompt,DeletePrompt ,QueryPromptByPK }
+export { QuerySignUsers, PutItem, dynamoDBToJSON, CreatePrompt,QueryPrompt,DeletePrompt ,QueryPromptByPK }

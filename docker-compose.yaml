@@ -13,7 +13,9 @@ services:
             - PISTON_REPO_URL=https://github.com/yanjun-ios/piston/releases/download/Packages/index
             - PISTON_DISABLE_NETWORKING=false
             - PISTON_RUN_TIMEOUT=300000
-            - PISTON_OUTPUT_MAX_SIZE=102400
+            - PISTON_COMPILE_TIMEOUT=300000
+            - PISTON_OUTPUT_MAX_SIZE=10240000
+            - PISTON_MAX_FILE_SIZE=50000000
         tmpfs:
             - /piston/jobs:exec,uid=1000,gid=1000,mode=711
             - /tmp:exec

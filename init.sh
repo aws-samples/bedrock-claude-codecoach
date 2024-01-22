@@ -59,7 +59,7 @@ add_users(){
   aws dynamodb put-item \
       --table-name bedrock-claude-codecoach \
       --item \
-          "{\"email\": {\"S\": \"${email}\"}, \"password\": {\"S\": \"${password_hash}\"}, \"role\": {\"S\": \"${role}\"}}"
+          "{\"PK\": {\"S\": \"${email}\"},\"SK\": {\"S\": \"#ACC\"}, \"password\": {\"S\": \"${password_hash}\"}, \"role\": {\"S\": \"${role}\"}}"
 
 }
 

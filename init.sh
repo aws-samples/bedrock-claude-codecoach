@@ -42,11 +42,11 @@ add_users(){
   email=$1
   password=$2
   role=$3
-  table_name="bedrock-claude-codecoach-users"
+  table_name="bedrock-claude-codecoach"
   aws dynamodb list-tables | grep "${table_name}" >/dev/null 2>&1
   if [ $? -eq 1 ]; then
       aws dynamodb create-table \
-          --table-name bedrock-claude-codecoach-users \
+          --table-name bedrock-claude-codecoach \
           --attribute-definitions \
               AttributeName=email,AttributeType=S \
           --key-schema \
@@ -57,7 +57,7 @@ add_users(){
   password_hash=$(echo -n $password | openssl dgst -sha256 -hex | sed 's/^.* //')
 #  role=$(expr ${role} == "admin"?"admin":"guest")
   aws dynamodb put-item \
-      --table-name bedrock-claude-codecoach-users \
+      --table-name bedrock-claude-codecoach \
       --item \
           "{\"email\": {\"S\": \"${email}\"}, \"password\": {\"S\": \"${password_hash}\"}, \"role\": {\"S\": \"${role}\"}}"
 

@@ -123,7 +123,7 @@ Prompt Editor
    ```
    https://<CDN_URL>
    ```
-
+   ![web](./images/web.png)
 
 
 ## Tips

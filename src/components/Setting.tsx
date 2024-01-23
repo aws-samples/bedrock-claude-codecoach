@@ -1,25 +1,31 @@
 import { useState,useEffect } from "react";
 
-import { useColorMode, Icon, IconButton, Box, Button, Select, Tabs, TabList, TabPanels, Tab, TabPanel } from "@chakra-ui/react";
+import { useColorMode, Icon, IconButton, Box, Button, Input,Select, Tabs, TabList, TabPanels, Tab, TabPanel } from "@chakra-ui/react";
 import { IoSettingsOutline } from "react-icons/io5"
 
 
 
 import { BsRobot } from "react-icons/bs";
-
 import { useRecoilState, useRecoilValue } from "recoil";
+
 import { authSettings, authState } from "../state"
 
-import Alert from "./Alert"
-import { LoadPrompt } from "@utils/prompt";
-import { rebotoColor } from "./RobotIconColor";
 
+import { LoadPrompt } from "@utils/prompt";
+import fetchRequest from '@utils/fetch';
+import { rebotoColor } from "./RobotIconColor";
+import Alert from "./Alert"
 interface PromptTemplate {
     PK?: string;
     name: string;
     prompt: string;
 }
 
+interface Password {
+    oldPassword: string,
+    newPassword: string,
+    newPasswordConfirm:string
+}
 
 const Setting = (props) => {
 
@@ -28,6 +34,8 @@ const Setting = (props) => {
 
     const [isOpen, setIsOpen] = useState(false);
     const [isClient, setIsClient] = useState(false);
+    const [passwordReady, setPasswordReady] = useState(false);
+
     const [myCopilot, setMyCopilot] = useState("no");
     const [aiRole, setAIRole] = useState("CODECOACH")
     const [callerValue, setCallerValue] = useState("");
@@ -35,7 +43,8 @@ const Setting = (props) => {
 
     
     const [tabIndex, setTabIndex] = useState(0);
-
+    
+    const [password, setPassword] = useState<Password>({oldPassword:"",newPassword:"",newPasswordConfirm:""})
 
     //RecoiValue State
     const [authSettingsValue,setAuthSettings] = useRecoilState(authSettings)
@@ -94,6 +103,23 @@ const Setting = (props) => {
             });
     };
 
+    const  handleSavePasswordClick = async () => {
+        try {
+            const res: Response = await fetchRequest("POST", `/api/password`, btoa(JSON.stringify(authSettingsValue)), {
+                oldPassword:password.oldPassword,
+                newPassword: password.newPassword,
+            });
+            if (res.status !== 200) {
+                console.log("error", res.status)
+                return
+            }else{
+                setPassword({oldPassword:"",newPassword:"",newPasswordConfirm:""})
+                setPasswordReady(false)
+            }
+        }catch(e){
+           
+        }
+    };
 
     const handlePromptListOnChange = (event) => {
 
@@ -119,6 +145,18 @@ const Setting = (props) => {
     }
 
     useEffect(() => {
+        if(password.oldPassword!=""&&password.newPassword!=""&&password.newPasswordConfirm!=""){
+            if(password.oldPassword!=password.newPassword&&password.oldPassword!=password.newPasswordConfirm){
+                if(password.newPassword===password.newPasswordConfirm){
+                  return  setPasswordReady(true)
+                }   
+            }
+        }
+        setPasswordReady(false)
+        
+    }, [password])
+    
+    useEffect(() => {
         setIsClient(true)
         if(promptTemplates.length===0){
             getPrompt()
@@ -140,8 +178,9 @@ const Setting = (props) => {
 
                     <Tabs index={tabIndex} onChange={(index:number)=>{setTabIndex(index)}}>
                         <TabList>
-                            <Tab>Auth</Tab>
+                            <Tab>AWS</Tab>
                             <Tab>Copilots</Tab>
+                            <Tab>Password</Tab>
                         </TabList>
 
                         <TabPanels>
@@ -180,23 +219,63 @@ const Setting = (props) => {
                                     
                                 </Box>
                             </TabPanel>
+                            <TabPanel>
+                                Old Password 
+                                <Input
+                                    type= "password"
+                                    value={password.oldPassword}
+                                    onChange={(e) => {
+                                    setPassword((prev)=>{
+                                        return {...prev, oldPassword:e.target.value}
+                                    })
+                                    }}
+                                />
+                                New Password 
+                                <Input
+                                    type= "password"
+                                    value={password.newPassword}
+                                    onChange={(e) => {
+                                        setPassword((prev)=>{
+                                            return {...prev, newPassword:e.target.value}
+                                        })
+                                    }}
+                                />
+                                New Password Confirm
+                                <Input
+                                    type= "password"
+                                    value= {password.newPasswordConfirm}
+                                    onChange={(e) => {
+                                        setPassword((prev)=>{
+                                            return {...prev, newPasswordConfirm:e.target.value}
+                                        })
+                                    }}
+                                />
+                               
+                            </TabPanel>
 
                         </TabPanels>
                     </Tabs>
 
-
                 }
 
-                childrenButton={
+                childrenButton={  
                     <>
-                       <Button colorScheme="blue" ml={3} onClick={handleTestClick}>
+                      {tabIndex==2?(<Button colorScheme="red" ml={3} onClick={handleSavePasswordClick} isDisabled={!passwordReady}>
+                            Save Password
+                        </Button>
+                        ):
+                       (
+                       <><Button colorScheme="blue" ml={3} onClick={handleTestClick}>
                             Test
                         </Button>
                         
                         <Button colorScheme="red" ml={3} isDisabled={callerValue === ""} onClick={handleSaveClick}>
                             Save
-                        </Button>
+                        </Button> </>
+                       )
+                       }
                     </>
+                   
                 }
 
             />

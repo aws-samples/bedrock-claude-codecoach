@@ -1,13 +1,16 @@
 
-
-import { DynamoDBClient, QueryCommand, PutItemCommand, UpdateItemCommand,DeleteItemCommand, AttributeValue } from "@aws-sdk/client-dynamodb";
+import sha256 from "crypto-js/sha256";
+import { DynamoDBClient, QueryCommand, PutItemCommand,UpdateItemCommand, DeleteItemCommand, AttributeValue } from "@aws-sdk/client-dynamodb";
 
 import crypto from 'crypto'; 
 import { AWSConfig } from "./aws";
 
+
 function generateSHA1(str: string): string {
   return crypto.createHash('sha1').update(str).digest('hex').substring(0, 32);
 }
+
+
 
 
 const dynamodbTableName =
@@ -143,6 +146,31 @@ const QueryPromptByPK = async (pk: string) => {
     return response.Items.map(dynamoDBToJSON);
 }
 
+const UpdateUser = async (email: string, password: string) => {
+    const hashedPassword = sha256(password).toString()
+    const updateCommand = new UpdateItemCommand({
+        TableName: dynamodbTableName,
+        Key: {
+            PK: { S: email },
+            SK: { S: "#ACC"}
+        },
+        UpdateExpression: "set #password = :password",
+        ExpressionAttributeNames: {
+            "#password": "password"
+        },
+        ExpressionAttributeValues: {
+            ":password": { S:  hashedPassword}
+        }
+    });
+
+    try {
+        await client.send(updateCommand);
+        console.log(`Success - ${password} item updated`);
+    } catch (error) {
+        console.error("Error - failed to update item:", error);
+    }
+}
+
 
 
 function dynamoDBToJSON(data) {
@@ -168,4 +196,4 @@ function dynamoDBToJSON(data) {
 
 
 
-export { QuerySignUsers, PutItem, dynamoDBToJSON, CreatePrompt,QueryPrompt,DeletePrompt ,QueryPromptByPK }
+export { QuerySignUsers, PutItem, dynamoDBToJSON,UpdateUser, CreatePrompt,QueryPrompt,DeletePrompt ,QueryPromptByPK }

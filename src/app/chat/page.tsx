@@ -333,7 +333,7 @@ const Chat = () => {
             <Box key={index} pt="50px">
 
               <Flex alignContent={"right"} justifyContent={"right"}>
-                <Box p='2' bg={isDark?"blue.400":"gray.100"} rounded={"8px"}>
+                <Box p='2' bg={isDark?"blue.300":"gray.100"} rounded={"8px"}>
                
                 <ReactMarkdown>{m.question}</ReactMarkdown>
                 </Box>
@@ -416,13 +416,14 @@ const Chat = () => {
         p={8}
       >
         <Textarea
-                   ref={ chatInput }
+                  ref={ chatInput }
                   placeholder={`Enter here ......`}
                   ml="-50px"
                   size="md"
                   resize="none"
                   rows={3}
                   w="70vw"
+                  bg={isDark?"":"gray.200"}
                   variant="brandPrimary"
                   onChange={(e) => debounced(e.target.value)}
                   onKeyDown={(e) => {
@@ -434,26 +435,6 @@ const Chat = () => {
                     }
                   }}
                 />
-        {/* <Input
-          ref={ chatInput }
-          size="md"
-          placeholder="Enter message"
-
-          onChange={(e) => debounced(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              if (chatInput.current&&chatInput.current.value){
-                sendMessage(chatInput.current.value);
-                chatInput.current.value="";
-              }
-
-
-            }
-          }}
-          w="70vw"
-          ml={"20px"}
-        /> */}
-        
       </Flex>
       
     </Flex>

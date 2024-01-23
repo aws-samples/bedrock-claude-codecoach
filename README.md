@@ -118,13 +118,14 @@ Prompt Editor
    
    ![cf-step5](./images/cf-step5.png)
    
-3. Access CodeCoach, default user admin@demo.com/123456!@#
+3. Access CodeCoach, default user admin@demo.com/123456!@#,**please change your password when you first login!**
 
    ```
    https://<CDN_URL>
    ```
    ![web](./images/web.png)
 
+   ![password](./images/password.png)
 
 ## Tips
 

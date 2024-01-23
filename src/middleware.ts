@@ -4,7 +4,7 @@ import { NextRequest ,NextResponse } from "next/server";
 
 // Define protected routes that require authentication
 const protectedRoutes = ["/chat","/prompt"];
-const protectedAPIRoutes =["/api/prompt","/api/caller","/api/execute","/api/beckrock/completion","/api/autogen/completion"]
+const protectedAPIRoutes =["/api/prompt","/api/caller","/api/beckrock/completion","/api/autogen/completion"]
 
 // Define authentication routes that should redirect if user is already logged in  
 const authRoutes = ["/signin"];

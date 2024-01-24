@@ -31,7 +31,7 @@ import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 
 
 import fetchRequest from '@utils/fetch';
-import {fetchRequestCode} from "@utils/fetch";
+
 import {countTokens} from "@utils/anthropictoken";
 
 
@@ -133,7 +133,6 @@ const Chat = () => {
 
   useEffect(() => {
     setIsClient(true)
-    console.log(auth);
   }, [])
 
   useEffect(() => {

@@ -33,6 +33,7 @@ const GetCompletion = async (role: string, query: string, history: unknown, writ
         "max_tokens_to_sample": 2048,
         "temperature": 0.2,
         "top_p": 0.9,
+        //"stop_sequences":["\n\nHuman:", "</function_calls>"],
       }
   
       console.log(payload)

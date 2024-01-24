@@ -48,7 +48,11 @@ const authSettings =atom({
   default: {"authType":"IAMROLE","aiRole":"CODECOACH","roleType":"system"},
 })
 
-
+const languageState =atom({
+  key: 'languageState',
+  default: 'en',
+  effects_UNSTABLE: [persistAtom]
+})
   
 const chatMessagesState = atom<ChatMessage[]>({
     key: 'chatMessagesState',
@@ -63,4 +67,4 @@ const promptTemplateState = atom<PromptTemplate[]>({
   });
 
 
-export {nameState, authState,runResult,authSettings,chatMessagesState,promptEditorResult, promptTemplateState}
+export {languageState,nameState, authState,runResult,authSettings,chatMessagesState,promptEditorResult, promptTemplateState}

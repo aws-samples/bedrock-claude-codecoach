@@ -1,7 +1,9 @@
+"use client";
+
 import {  useRef  } from "react";
 
 import {Button, AlertDialog, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, Textarea } from "@chakra-ui/react";
-
+import { useTranslation } from "react-i18next";
 
 interface AlertProps {
   isOpen: boolean;
@@ -15,6 +17,7 @@ interface AlertProps {
 
 const Alert = ({ isOpen, onClose, title, childrenBody,childrenButton }: AlertProps) => {
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const {t} = useTranslation();
 
   return (
     <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose}>
@@ -24,7 +27,7 @@ const Alert = ({ isOpen, onClose, title, childrenBody,childrenButton }: AlertPro
           <AlertDialogBody>{childrenBody}</AlertDialogBody>
           <AlertDialogFooter>
             <Button ref={cancelRef} onClick={onClose}>
-              Close
+            {t('Close')}
             </Button>
             {childrenButton}
           </AlertDialogFooter>

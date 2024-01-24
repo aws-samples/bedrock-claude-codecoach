@@ -19,6 +19,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import { promptEditorResult, authSettings, authState } from "../../state";
 import { CustomPromptTemplate, LoadPrompt } from '@utils/prompt';
 import fetchRequest from '@utils/fetch';
+import { useTranslation } from 'react-i18next';
 
 interface MarkdownEditorProps {
     onChange: (value: string) => void;
@@ -68,6 +69,10 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     const [isClient, setIsClient] = useState(false);
 
     const selectRef = useRef<HTMLSelectElement>(null);
+
+    const { t,i18n} = useTranslation();
+
+
 
 
 
@@ -245,7 +250,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
     return (
         <Box p={4}>
-            <Heading>Prompt Editor</Heading>
+            <Heading>{t('Prompt Editor')}</Heading>
             <HStack spacing='24px'>
                 <Textarea
                     value={markdown}
@@ -264,12 +269,12 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
             <Box mt={4} display="flex" alignItems="center"
             >
-                Prompt Name:  &nbsp; <Input width={"200px"} value={promptName} onChange={(e) => {
+                {t('Template Name')}:  &nbsp; <Input width={"200px"} value={promptName} onChange={(e) => {
                     setPrompName(e.target.value)
                 }} /> &nbsp;
                 
                 
-                Prompt List:  &nbsp;
+                {t('Template List')}:  &nbsp;
                 <Select w={"200px"} ref={selectRef} value={selectedPromptName} onChange={handlePromptListOnChange} >
                     <option value="no">------</option>
                     {isClient && promptTemplates.map((promptTemplate) => {
@@ -284,11 +289,11 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                         onSave()
                     }
                 }}>
-                Save</Button> &nbsp;
+                {t('Save')}</Button> &nbsp;
 
                 
-                <Button ml={"20px"} onClick={handleRemove}>Remove</Button>
-                <Button ml={"20px"} onClick={getPrompt}>Refresh List</Button>
+                <Button ml={"20px"} onClick={handleRemove}>{t('Remove')}</Button>
+                <Button ml={"20px"} onClick={getPrompt}>{t('Refresh List')}</Button>
 
 
             </Box>
@@ -296,7 +301,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
             <Box mt={4}
             >
-                Prompt Parameters :
+                {t('Prompt Parameters')} :
                 {keys.map((key) => {
 
                     return <Box key={key} mt={"15px"}>
@@ -316,7 +321,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             >
                 <HStack spacing='24px'>
                     {/* <Button onClick={() => handleOnChange('')}>Clear</Button> */}
-                    <Button onClick={() => setMessage('')}>ClearOutput</Button>
+                    <Button onClick={() => setMessage('')}>{t('Clear Output')}</Button>
                     <Button
                         disabled={submitting}
                         onClick={() => {
@@ -327,7 +332,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                         {submitting ? (
                             <Spinner />
                         ) : (
-                            'Submit'
+                            t('Submmit')
                         )}
 
                     </Button>

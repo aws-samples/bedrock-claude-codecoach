@@ -23,11 +23,15 @@ export function middleware(request: NextRequest) {
   }
 
   // If trying to access protected route without being logged in, redirect to sign in
+  //console.log(protectedRoutes.includes(request.nextUrl.pathname),currentUser)
+    
   if (
     protectedRoutes.includes(request.nextUrl.pathname) &&
     (!currentUser || Date.now() > JSON.parse(currentUser).expiredAt)
   ) {
     // Delete auth cookie and redirect to sign in page, if expired 
+
+    
     const response = NextResponse.redirect(new URL("/signin", request.url));
     request.cookies.delete("auth");
     response.cookies.delete("auth");

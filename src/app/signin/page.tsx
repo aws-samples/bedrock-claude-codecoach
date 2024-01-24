@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useSetRecoilState } from "recoil";
 import { useRouter } from "next/navigation";
+import { useTranslation } from 'react-i18next'
+
 import {
   Button,
   Checkbox,
@@ -56,6 +58,8 @@ const SigninScreen = () => {
   const router = useRouter();
   const setAuthState = useSetRecoilState(authState);
 
+  const {t} = useTranslation();
+
   const handIsOpen = (open: boolean) => {
     console.log("andIsOpen invoke", open);
     setIsOpen(open);
@@ -97,9 +101,9 @@ const SigninScreen = () => {
       <Stack minH={"100vh"} direction={{ base: "column", md: "row" }}>
         <Flex p={8} flex={1} align={"center"} justify={"center"}>
           <Stack spacing={4} w="full" maxW={"md"}>
-            <Heading fontSize={"2xl"}>Sign in to your account</Heading>
+            <Heading fontSize={"2xl"}>{t('Sign in to your account')}</Heading>
             <FormControl id="email">
-              <FormLabel>Email address</FormLabel>
+              <FormLabel>{t('Email address')}</FormLabel>
               <Input
                 type="email"
                 value={user.email}
@@ -109,7 +113,7 @@ const SigninScreen = () => {
               />
             </FormControl>
             <FormControl id="password" isRequired>
-              <FormLabel>Password</FormLabel>
+              <FormLabel>{t('Password')}</FormLabel>
               <InputGroup>
                 <Input
                   type={showPassword ? "text" : "password"}
@@ -136,15 +140,15 @@ const SigninScreen = () => {
                 align={"start"}
                 justify={"space-between"}
               >
-                <Checkbox>Remember me</Checkbox>
-                <Text color={"blue.500"}>Forgot password?</Text>
+                <Checkbox>{t('Remember me')}</Checkbox>
+                <Text color={"blue.500"}>{t('Forgot password')}?</Text>
               </Stack>
               <Button
                 colorScheme={"blue"}
                 variant={"solid"}
                 onClick={handleClick}
               >
-                Sign in
+                {t('Sign in')}
               </Button>
             </Stack>
           </Stack>

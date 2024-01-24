@@ -1,3 +1,5 @@
+
+
 import { useState,useEffect } from "react";
 
 import { useColorMode, Icon, IconButton, Box, Button, Input,Select, Tabs, TabList, TabPanels, Tab, TabPanel } from "@chakra-ui/react";
@@ -5,9 +7,11 @@ import { IoSettingsOutline } from "react-icons/io5"
 
 
 
-import { BsRobot } from "react-icons/bs";
-import { useRecoilState, useRecoilValue } from "recoil";
 
+import { useTranslation } from "react-i18next";
+import { BsRobot } from "react-icons/bs";
+
+import { useRecoilState, useRecoilValue } from "recoil";
 import { authSettings, authState } from "../state"
 
 
@@ -15,6 +19,7 @@ import { LoadPrompt } from "@utils/prompt";
 import fetchRequest from '@utils/fetch';
 import { rebotoColor } from "./RobotIconColor";
 import Alert from "./Alert"
+
 interface PromptTemplate {
     PK?: string;
     name: string;
@@ -49,9 +54,11 @@ const Setting = (props) => {
     //RecoiValue State
     const [authSettingsValue,setAuthSettings] = useRecoilState(authSettings)
     const auth = useRecoilValue(authState)
+   
 
     const [authType, setAuthType] = useState(auth.role === "admin" ? "IAMROLE" : "AKSK");
    
+    const {t} = useTranslation();
 
     const onClose = () => setIsOpen(false);
     const handleAuthTypeChange = (e) => {
@@ -128,7 +135,6 @@ const Setting = (props) => {
 
 
         if (name !== "no") {
-            
             setAIRole("no")
             setMyCopilot(name)
             console.log(template.PK)
@@ -173,29 +179,28 @@ const Setting = (props) => {
                 aria-label="Toggle Theme"
                 onClick={() => setIsOpen(true)}
             > Open Dialog</IconButton>
-            <Alert isOpen={isOpen} onClose={onClose} title="Config"
+            <Alert isOpen={isOpen} onClose={onClose} title={t('Config')}
                 childrenBody={
-
                     <Tabs index={tabIndex} onChange={(index:number)=>{setTabIndex(index)}}>
                         <TabList>
                             <Tab>AWS</Tab>
-                            <Tab>Copilots</Tab>
-                            <Tab>Password</Tab>
+                            <Tab>{t('Copilots')}</Tab>
+                            <Tab>{t('Password')}</Tab>
                         </TabList>
 
                         <TabPanels>
                             <TabPanel>
-                                Settings {authType}
+                                {t('Auth')}
                                 <Select value={authType} id="auth-type" onChange={handleAuthTypeChange}>
                                     <option value="IAMROLE">IAM ROLE/SharedProfile</option>
                                 </Select>
                                 <Box mt="20px">
-                                    Caller Identity: {callerValue}
+                                    {t('Caller Identity')}: {callerValue}
                                 </Box>
                             </TabPanel>
                             <TabPanel>
                                 <Box mt="10px">
-                                    <label htmlFor="aiRole">Built-in:</label>
+                                    <label htmlFor="aiRole">{t('Built-in')}:</label>
                                     <Select value={aiRole} id="aiRole" onChange={handleAIRoleChange}>
                                         <option value="no">------</option>
                                         <option value="CODECOACH">Code Coach</option>
@@ -203,7 +208,7 @@ const Setting = (props) => {
                                         {/* <option value="AUTOGEN">AUTOGEN</option> */}
                                         <option value="NORMAL">Claude2 Assistant</option>
                                     </Select><br />
-                                    <label htmlFor="aiRole">My Copilots:</label>
+                                    <label htmlFor="aiRole">{t('My Copilots')}:</label>
 
                                     <Select   value={myCopilot} onChange={handlePromptListOnChange} >
                                         <option value="no">------</option>
@@ -220,7 +225,7 @@ const Setting = (props) => {
                                 </Box>
                             </TabPanel>
                             <TabPanel>
-                                Old Password 
+                                {t('Old Password')}
                                 <Input
                                     type= "password"
                                     value={password.oldPassword}
@@ -230,7 +235,7 @@ const Setting = (props) => {
                                     })
                                     }}
                                 />
-                                New Password 
+                                {t('New Password')}
                                 <Input
                                     type= "password"
                                     value={password.newPassword}
@@ -240,7 +245,7 @@ const Setting = (props) => {
                                         })
                                     }}
                                 />
-                                New Password Confirm
+                                {t('Confirm Password')}
                                 <Input
                                     type= "password"
                                     value= {password.newPasswordConfirm}
@@ -261,16 +266,16 @@ const Setting = (props) => {
                 childrenButton={  
                     <>
                       {tabIndex==2?(<Button colorScheme="red" ml={3} onClick={handleSavePasswordClick} isDisabled={!passwordReady}>
-                            Save Password
+                      {t('Save Password')}
                         </Button>
                         ):
                        (
                        <><Button colorScheme="blue" ml={3} onClick={handleTestClick}>
-                            Test
+                            {t('Test')}
                         </Button>
                         
                         <Button colorScheme="red" ml={3} isDisabled={callerValue === ""} onClick={handleSaveClick}>
-                            Save
+                            {t('Save')}
                         </Button> </>
                        )
                        }

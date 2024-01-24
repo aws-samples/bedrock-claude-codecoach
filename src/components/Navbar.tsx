@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { useEffect, useState } from 'react'
 import { useRecoilState } from 'recoil'
@@ -32,13 +32,15 @@ import {
 
 
 import {IoLogInOutline,IoLogOutOutline} from "react-icons/io5"
+import { MdOutlineLanguage } from "react-icons/md";
 
 
 import {DarkModeSwitch} from "./DarkModeSwitch"
-import { authState } from '../state'
+import { authState,languageState } from '../state'
 
 
 import Setting from "./Setting"
+import { useTranslation } from 'react-i18next'
 
 
 
@@ -50,14 +52,46 @@ export default function Navbar() {
   const [isClient, setClient]=useState(false)
   const router = useRouter()
 
-  
+  const { t,i18n} = useTranslation();
+  // const [language, setLanguage] =useState("en")
+  const [language,setLanguage] =useRecoilState(languageState)
+
+  const handChangeLanguge =()=>{
+    if (language === "en") {
+      setLanguage("zh")
+      i18n.changeLanguage("zh")
+    }else{
+      setLanguage("en")
+      i18n.changeLanguage("en")
+    }
+
+    console.log(language)
+  }
+
   useEffect(()=>{
     setClient(true);
+    i18n.changeLanguage(language)
   },[auth])
 
   const handleSignOut=()=>{
     setAuth(null)
+    fetch('/signout', {
+      method: 'GET',
+    })
+      .then(response => {
+        if (response.ok) {
+          // Logout successful
+          console.log('Successfully logged out');
+        } else {
+          // Logout failed
+          console.log('Logout failed');
+        }
+      })
+      .catch(error => {
+        console.error('Error during logout:', error);
+      });
     router.push("/")
+    
   }
 
   return (
@@ -96,7 +130,6 @@ export default function Navbar() {
           </Flex>
         </Flex>
         
-      
         <Stack
           flex={{ base: 1, md: 0 }}
           justify={'flex-end'}
@@ -108,18 +141,24 @@ export default function Navbar() {
           </Button>
           {isClient&&auth&&<Setting/>}
           <DarkModeSwitch/>
-
+          
           </Stack>
-       
+
+         
+
         <Stack
           flex={{ base: 1, md: 0 }}
           justify={'flex-end'}
           direction={'row'}
           spacing={6}>
-
-
             
-          
+         <Link href="#">
+            <IconButton
+            icon={<MdOutlineLanguage/>}
+            aria-label=""
+            onClick={handChangeLanguge}
+          />
+          </Link>
           {isClient&&!auth&&
           <Link href="/signin">
           <IconButton
@@ -130,13 +169,13 @@ export default function Navbar() {
           </Link>
           }
           {isClient&&auth&&
-          <Link href="/signout">
+          <a href="#">
             <IconButton
             icon={<IoLogOutOutline/>}
             aria-label={'Toggle Navigation'}
             onClick={handleSignOut}
           />
-          </Link>
+          </a>
           }
          
         </Stack>
@@ -153,6 +192,8 @@ const DesktopNav = () => {
   const linkColor = useColorModeValue('gray.600', 'gray.200')
   const linkHoverColor = useColorModeValue('gray.800', 'white')
   const popoverContentBgColor = useColorModeValue('white', 'gray.800')
+  
+  const {t} = useTranslation();
 
   return (
     <Stack direction={'row'} spacing={4}>
@@ -172,7 +213,7 @@ const DesktopNav = () => {
                   textDecoration: 'none',
                   color: linkHoverColor,
                 }}>
-                {navItem.label}
+                 {t(navItem.label)}
               </Box>
             </PopoverTrigger>
 

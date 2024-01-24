@@ -6,6 +6,8 @@ import { useRecoilState} from "recoil"
 
 import Link  from 'next/link'
 
+
+
 import {
   Flex,
   Container,
@@ -19,12 +21,28 @@ import {
 
 import { nameState} from "../state"
 
+import { useTranslation } from 'react-i18next';
+
+
+
 export default function CallToActionWithIllustration() {
   const [name, setName] = useRecoilState(nameState)
   
   const [isClient, setIsClient] = useState(false)
+  const { t,i18n} = useTranslation();
+  const [language, setLanguage] =useState("en")
 
- 
+  const handChangeLanguge =()=>{
+    if (language === "en") {
+      setLanguage("zh")
+      i18n.changeLanguage(language)
+    }else{
+      setLanguage("en")
+      i18n.changeLanguage(language)
+    }
+
+    
+  }
   useEffect(() => {
     setIsClient(true)
   }, [])

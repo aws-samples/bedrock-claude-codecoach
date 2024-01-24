@@ -1,12 +1,12 @@
 # Bedrock Claude CodeCoach
 
-[中文版](./README.zh.md)
-
-This repository is a sample code coach(include code interpreter ) using the Anthropic company's LLM [Claude 2](https://www.anthropic.com/index/claude-2), one of the foundational models provided by [Amazon Bedrock](https://aws.amazon.com/bedrock/) for generative AI. This sample is an innovative tool designed to assist developers in writing efficient and high-quality code .
 
 
+本项目是使用Amazon Bedrock和Anthropic公司的[Claude 2](https://www.anthropic.com/index/claude-2)大语言模型构建的一个代码助手，它包括***代码生成功能，代码执行功能，提示词模版编辑器***，支持***python, golang , nodejs, php,rust***语言的执行、编译、运行，而且这些环境内置了Amazon Web Service SDK。我们希望通过这个示例项目帮助大家了解 [Amazon Bedrock](https://aws.amazon.com/bedrock/) , Claude2的开发流程，提供开箱即用的组件，同时也希望这个项目可以帮助开发人员编写高效、高质量的代码,尤其是生成Amazon Web Service SDK的相关代码。
 
-## Architecture
+
+
+## 架构
 
 It's an architecture built on AWS managed services, eliminating the need for infrastructure management. Utilizing Amazon Bedrock, there's no need to communicate with APIs outside of AWS. This enables deploying scalable, reliable, and secure applications.
 
@@ -21,11 +21,11 @@ It's an architecture built on AWS managed services, eliminating the need for inf
 
 
 
-## Demo
+## 演示
 
 https://github.com/stevensu1977/amazon-bedrock-coding-coach/assets/6694421/e59c7c1f-5054-4f3a-8729-970d6f57af11
 
-CodeCoach Vimeo link:
+CodeCoach 演示视频链接:
 
 [<img src="https://i.vimeocdn.com/video/1745485180-bfd62fa237d46ed7ced089aed94304371930008c865a89801f740610cf832da4-d_640" width="50%">](https://vimeo.com/879129321 "CodeCoach")
 
@@ -33,9 +33,9 @@ CodeCoach Vimeo link:
 
 
 
-Prompt Editor 
+提示词编辑器
 
-![prompteditor](./images/prompteditor.png)
+![prompteditor](./images/prompteditor.zh.png)
 
 
 ## Features and Roadmap
@@ -77,10 +77,10 @@ Prompt Editor
   
 
 
-## Deployment (Cloudformation)
+## 部署 (Cloudformation)
 
 
-1. Option1.  Create cloudformation statc use AWS CLI tools. 
+1. 选项1.  使用AWS CLI命令行工具进行部署. 
 
    ```bash
    #Replace <your_ec2_keypair> to your EC2 key pair.
@@ -100,36 +100,36 @@ Prompt Editor
 
 
 
-2. Option2.  Create cloudformation through web console
+2. 选项2.  使用Web控制台进行部署
 
-   Step1.   click create stack and upload cf-template.yaml
+   步骤1.  进入Cloudformation界面，点击创建Stack 并且上传cf-template.yaml文件
 
    ![cf-step1](./images/cf-step1.png)
 
    ![cf-step2](./images/cf-step2.png)
 
-   Step2. Setup parameter and Submit
+   步骤2. 设置EC2密钥对名字,点击下一步，确认后提交
 
    ![cf-step3](./images/cf-step3.png)
 
    ![cf-step4](./images/cf-step4.png)
 
-   Step3. Found cloudfront URL
+   步骤3. Cloudformation Stack创建完成后查看 cloudfront 访问地址
    
    ![cf-step5](./images/cf-step5.png)
    
-3. Access CodeCoach, default user admin@demo.com/123456!@#,**please change your password when you first login!**
+3. 登录CodeCoach, 默认用户名密码: admin@demo.com/123456!@#,**首次登录后切记修改密码!**
 
    ```
    https://<CDN_URL>
    ```
    ![web](./images/web.png)
 
-   ![password](./images/password.png)
+   ![password](./images/password.zh.png)
 
 ## Tips
 
-- Claude 2 prompt guide  https://docs.anthropic.com/claude/docs/introduction-to-prompt-design
+- Claude 2 提示词参考  https://docs.anthropic.com/claude/docs/introduction-to-prompt-design
 
   
 

@@ -48,9 +48,11 @@ add_users(){
       aws dynamodb create-table \
           --table-name bedrock-claude-codecoach \
           --attribute-definitions \
-              AttributeName=email,AttributeType=S \
+              AttributeName=PK,AttributeType=S \
+              AttributeName=SK,AttributeType=S \
           --key-schema \
-              AttributeName=email,KeyType=HASH \
+              AttributeName=PK,KeyType=HASH \
+              AttributeName=SK,KeyType=RANGE \
           --provisioned-throughput \
               ReadCapacityUnits=5,WriteCapacityUnits=5
   fi

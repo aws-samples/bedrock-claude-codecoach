@@ -29,7 +29,10 @@ Resources:
               - sts:AssumeRole
       Path: /
       ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AdministratorAccess
+        - arn:aws:iam::aws:policy/ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+        - arn:aws:iam::aws:policy/AmazonBedrockFullAccess
 
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile

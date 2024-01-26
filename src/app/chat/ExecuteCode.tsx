@@ -6,9 +6,13 @@ import { VscTerminalPowershell } from "react-icons/vsc";
 import {githubLight} from '@uiw/codemirror-theme-github';
 import {python} from "@codemirror/lang-python";
 
+import { useTranslation } from "react-i18next";
+import { useSetRecoilState } from "recoil";
+
+
 import {fetchRequestCode} from "../../utils/fetch";
 import {runResult} from "../../state";
-import { useSetRecoilState } from "recoil";
+
 
 
 export const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || '';
@@ -28,6 +32,8 @@ const ExecuteCodeButton = ({language,code,setCode}:ExcuteCodeProps) => {
   const [currentCode, setCurrentCode] = useState(code);
   const [output, setOutput] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const {t} = useTranslation();
 
 
 
@@ -105,10 +111,10 @@ const ExecuteCodeButton = ({language,code,setCode}:ExcuteCodeProps) => {
             <AlertDialogFooter>
 
               <Button ref={cancelRef} onClick={onClose}>
-                Close
+              {t('Close')}
               </Button>
               <Button ml={3} colorScheme="green" onClick={onSave}>
-                Save
+                {t('Save')}
               </Button>
               {errorMessage!==""&&
               <Button ml={3} 
@@ -118,12 +124,12 @@ const ExecuteCodeButton = ({language,code,setCode}:ExcuteCodeProps) => {
                   setRunResult(errorMessage)
                 }
                 }>
-               How to fix
+               {t('How to fix')}
               </Button>
               }
               
               <Button isLoading={loading} colorScheme="orange" onClick={onExecute} ml={3}>
-                Execute
+              {t('Execute')}
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>

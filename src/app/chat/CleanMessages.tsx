@@ -3,6 +3,8 @@ import { IconButton, Button } from "@chakra-ui/react";
 
 import { MdOutlineDeleteForever } from "react-icons/md";
 
+import { useTranslation } from "react-i18next";
+
 import Alert from "../../components/Alert"
 
 
@@ -20,6 +22,10 @@ const CleanMessages = ({ clearMessages }: CleanMessagesProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const onClose = () => setIsOpen(false);
   const cancelRef = useRef<HTMLButtonElement>(null);
+
+  const {t} = useTranslation();
+
+  
   const onDelete = () => {
     clearMessages();
     onClose();
@@ -39,10 +45,9 @@ const CleanMessages = ({ clearMessages }: CleanMessagesProps) => {
         title={"Clean Messages"}
         childrenBody={"Are you sure you want to clean All messages ?"}
         childrenButton={
-          <>
             <Button colorScheme="red" onClick={onDelete} ml={3}>
-              Delete
-            </Button></>
+              {t('Delete')}
+            </Button>
         }
       ></Alert>
     </>
@@ -54,6 +59,8 @@ export const CleanMessagesByIndex = ({ index, cleanMessageByIndxe }: CleanMessag
   const [isOpen, setIsOpen] = useState(false);
   const onClose = () => setIsOpen(false);
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const {t} = useTranslation();
+
   const onDelete = () => {
     cleanMessageByIndxe(index);
     onClose();
@@ -73,10 +80,10 @@ export const CleanMessagesByIndex = ({ index, cleanMessageByIndxe }: CleanMessag
         title={"Clean this message"}
         childrenBody={"Are you sure you want to clean this message  ?"}
         childrenButton={
-          <>
+          
             <Button colorScheme="red" onClick={onDelete} ml={3}>
-              Delete
-            </Button></>
+            {t('Delete')}
+            </Button>
         }
       ></Alert>
     </>

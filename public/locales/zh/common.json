@@ -23,10 +23,13 @@
     "Built-in":"内置",
     "My Copilots":"我的助手",
     "Close":"关闭",
+    "Execute":"执行",
     "Test":"测试",
     "Save":"保存",
+    "How to fix":"修复助手",
     "Save Password":"保存密码",
     "Remove":"删除",
+    "Delete":"删除",
     "Refresh List":"刷新列表",
     "title":"CodeCoach 中文",
     "Common": {

@@ -118,7 +118,7 @@ if [ $# -eq 0 ];then
       init
       build_image
       add_users "admin@demo.com" "123456!@#" "admin"
-      add_users "guest@demo.com" "123456" "guest"
+      #add_users "guest@demo.com" "123456" "guest"
       start
       sleep 10s
       add_runtime python=3.10.0

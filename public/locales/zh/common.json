@@ -1,6 +1,6 @@
 {
     "Home": "主页",
-    "Chat": "编程",
+    "Chat": "聊天",
     "Clear Output": "清空输出",
     "Prompt Editor": "提示词",
     "Prompt Parameters": "提示参数",
@@ -12,6 +12,7 @@
     "Old Password":"旧密码",
     "New Password":"新密码",
     "Confirm Password":"确认密码",
+    "Model":"模型",
     "Sign in":"登录",
     "Submmit":"提交",
     "Remember me":"记住我",
@@ -32,7 +33,7 @@
     "Delete":"删除",
     "Refresh List":"刷新列表",
     "title":"CodeCoach 中文",
-    "Common": {
-        "title": "Title 中文"
-      }
+    "Search(beta)":"搜索(beta)",
+    "Search":"搜索"
+   
 }

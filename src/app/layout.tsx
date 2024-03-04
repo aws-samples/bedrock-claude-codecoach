@@ -13,21 +13,6 @@ import Navbar from '../components/Navbar'
 import i18n from '../i18n';
 
 
-// i18n.init({
-//   lng: 'en',
-//   resources: {
-//     en: {
-//       translation: {
-//         "Welcome to React": "Welcome to React and react-i18next"
-//       }
-//     },
-//     fr: {
-//       translation: {
-//         "Welcome to React": "Bienvenue à React et react-i18next"
-//       }
-//     }
-//   }
-// });
 
 export default function RootLayout({
   children,

@@ -75,8 +75,8 @@ build_image(){
   # use env configuration
   mv .env.sample .env.local
   # set default region
-  sed -i '/^NEXT_PUBLIC_AWS_REGION/d' .env.local
-  echo "NEXT_PUBLIC_AWS_REGION=\"$(aws configure get default.region)\"" >> .env.local
+  sed -i '/^AWS_REGION/d' .env.local
+  echo "AWS_REGION=\"$(aws configure get default.region)\"" >> .env.local
   docker build -t codecoach .
 }
 

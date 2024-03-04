@@ -2,7 +2,7 @@ import { BedrockRuntimeClient, InvokeModelWithResponseStreamCommand } from "@aws
 import { STS } from "@aws-sdk/client-sts";
 
 
-const AWSRegion = process.env.AWS_REGION ?? 'us-east-1'
+const AWSRegion = process.env.AWS_REGION ?? 'us-west-2'
 
 interface AWSConfigWithCredentials {
   region: string

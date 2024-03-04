@@ -1,7 +1,7 @@
 
 
 
-import { BedrockClient, AWSConfig, AWSConfig2 } from '@utils/aws';
+import { BedrockClient, AWSConfig} from '@utils/aws';
 
 import { PromptTemplate } from "@langchain/core/prompts";
 

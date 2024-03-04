@@ -33,12 +33,25 @@ const generatePayload = (model: string, prompt: string) => {
       max_tokens: 2048
     };
 
-  } else {
+  }
+  
+  if(model.indexOf("claude-3-sonnet-20240229-v1:0") > -1){
+    // Return payload for Claude3 model
+   return {
+      "messages" : [
+        {"role": "user", "content": prompt}
+      ],
+      top_p: 0.9,
+      temperature: 0.2,
+      max_tokens:2048,
+      anthropic_version:"bedrock-2023-05-31"
+    }
+  }
 
     // Return default payload 
     return defaultPayload;
 
-  }
+  
 };
 
 
@@ -58,9 +71,14 @@ const getCompletion = async (model: string, role: string, query: string, history
     // Stringify history for prompt
     const historyString = JSON.stringify(history);
 
+    // Check if Mistral model
+    const isMistral = model.indexOf('mistral') > -1;
+    const isClaude3 = model.indexOf('claude-3-sonnet-20240229-v1:0') > -1;
+
+
     // Format prompt based on role  
     let prompt;
-    if (role === 'RAW') {
+    if (role === 'RAW' || isClaude3) {
       prompt = query;
     } else {
       prompt = await promptTemplate.format({
@@ -69,8 +87,6 @@ const getCompletion = async (model: string, role: string, query: string, history
       });
     }
 
-    // Check if Mistral model
-    const isMistral = model.indexOf('mistral') > -1;
 
     if(isMistral){
       prompt = query;
@@ -85,8 +101,9 @@ const getCompletion = async (model: string, role: string, query: string, history
 
     // Call model
     const client = new BedrockClient(AWSConfig());
+    
+    
     const response = await client.invokeModelWithStream(payload, model);
-
     // Handle Mistral vs Claude2 responses
     if (response.body) {
       await writer.ready;
@@ -99,9 +116,18 @@ const getCompletion = async (model: string, role: string, query: string, history
             const { outputs } = JSON.parse(Buffer.concat([item.chunk.bytes]).toString('utf-8'));
             const { text } = outputs[0];
             await writer.write(text);
-
-            // Claude2 model  
-          } else {
+           
+          } 
+          // Claude3 model  
+          else if (isClaude3) {
+            const outputs = JSON.parse(Buffer.concat([item.chunk.bytes]).toString('utf-8'));
+            if (outputs.delta?.type==="text_delta") {
+              await writer.write(outputs.delta?.text);
+            }
+           
+          } 
+           // Claude2 model  
+          else {
             const { completion } = JSON.parse(Buffer.concat([item.chunk.bytes]).toString('utf-8'));
             await writer.write(completion);
           }

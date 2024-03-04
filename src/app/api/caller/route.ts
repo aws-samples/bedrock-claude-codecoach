@@ -1,6 +1,6 @@
 
 import { NextRequest, NextResponse } from 'next/server'
-import { AuthProps,AWSConfig, STSClient } from "@utils/aws"
+import { AuthProps,AWSConfig, STSClient,AWSRegion } from "@utils/aws"
 
 
 
@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     // Perform any required logic with the authType value
     const client = new STSClient(AWSConfig())
     const { Arn } = await client.getCallerIdentity();
-    return NextResponse.json({ me: Arn });
+    return NextResponse.json({ me: AWSRegion+" | "+Arn });
   } catch {
     return new Response("BAD Request", { status: 403 });
 

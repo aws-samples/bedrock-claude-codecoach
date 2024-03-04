@@ -22,7 +22,7 @@ import {
 
 import { FaRegCopy } from "react-icons/fa"
 import { BsRobot,BsArrowUpSquare,BsArrowDownSquare } from "react-icons/bs";
-import { BiDollarCircle } from "react-icons/bi"
+// import { BiDollarCircle } from "react-icons/bi"
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -47,7 +47,7 @@ import { rebotoColor } from '@components/RobotIconColor';
 
 
 
-const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || '';
+const baseURL = process.env.API_SERVER_URL || '';
 
 const supportedLanguages=process.env.SUPPORTED_LANGUAGES ||  ["python","php","lua","typescript","go","awscli","sqlite3","sql","rust"]
 
@@ -252,6 +252,7 @@ const Chat = () => {
         history: history,
         role: authSettingsValue.aiRole,
         roleType: authSettingsValue.roleType,
+        model: authSettingsValue.model
 
       }  );
       if (res.status!==200){
@@ -343,7 +344,8 @@ const Chat = () => {
               </Flex>
               <Box mt="20px"><CleanMessagesByIndex index={index} cleanMessageByIndxe={removeMessageByIndex} />
               
-              <Icon as={BsRobot} boxSize="24px" color={rebotoColor(isDark,authSettingsValue.roleType,authSettingsValue.aiRole)} />{aiThinking&&<Spinner size='sm'/>} {!aiThinking&&m.costToken&&<Button leftIcon={<BiDollarCircle />} variant='solid' size={"xs"}>Token Cost : {m.costToken}</Button>}
+              <Icon as={BsRobot} boxSize="24px" color={rebotoColor(isDark,authSettingsValue.roleType,authSettingsValue.aiRole)} />{aiThinking&&<Spinner size='sm'/>} 
+              {/* {!aiThinking&&m.costToken&&<Button leftIcon={<BiDollarCircle />} variant='solid' size={"xs"}>Token Cost : {m.costToken}</Button>} */}
               </Box>
               <Box ml="30px"  >
                 <ReactMarkdown

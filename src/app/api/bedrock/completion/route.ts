@@ -1,6 +1,6 @@
 import { NextRequest, } from 'next/server'
 
-import {GetCompletion} from "@utils/completion"
+import {getCompletion} from "@utils/completion"
 import { GetPrompByRole } from '@utils/prompt'
 
 
@@ -20,16 +20,19 @@ export async function POST(req: NextRequest) {
     const decodedPayload = atob(encodedPayload);
     const authPayload = JSON.parse(decodedPayload) as AuthProps;
 
-    console.log(authPayload)
+   
 
-    const { query, history, role,roleType } = await req.json()
+    const { query, history, role,roleType,model } = await req.json()
+
+
+    console.log(authPayload,model)
 
     const stream = new TransformStream();
     const writer = stream.writable.getWriter();
 
     
 
-    GetCompletion(role ?? "CODECOACH", query ?? "Hello LLM", history ?? [], writer,await GetPrompByRole(role ?? "CODECOACH", roleType));
+    getCompletion(model,role ?? "CODECOACH", query ?? "Hello LLM", history ?? [], writer,await GetPrompByRole(role ?? "CODECOACH", roleType));
     
     return new Response(stream.readable, {
       status: 200,

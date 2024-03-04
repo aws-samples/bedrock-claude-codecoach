@@ -45,7 +45,7 @@ const promptEditorResult =atom({
 
 const authSettings =atom({
   key: 'authSettings',
-  default: {"authType":"IAMROLE","aiRole":"CODECOACH","roleType":"system"},
+  default: {"authType":"IAMROLE","aiRole":"CODECOACH","roleType":"system","model":"anthropic.claude-v2"},
 })
 
 const languageState =atom({

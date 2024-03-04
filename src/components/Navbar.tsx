@@ -353,6 +353,10 @@ const NAV_ITEMS: Array<NavItem> = [
     label: 'Prompt Editor',
     href: '/prompt'
   },
+  // {
+  //   label: 'Search(beta)',
+  //   href: '/search'
+  // },
   {
     label: 'Github',
     href: 'https://github.com/aws-samples/bedrock-claude-codecoach',

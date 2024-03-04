@@ -58,12 +58,18 @@ const Setting = (props) => {
 
     const [authType, setAuthType] = useState(auth.role === "admin" ? "IAMROLE" : "AKSK");
    
+    const [model, setModel] = useState(auth.model );
+
     const {t} = useTranslation();
 
     const onClose = () => setIsOpen(false);
     const handleAuthTypeChange = (e) => {
         setAuthType(e.target.value);
         setCallerValue("")
+    };
+
+    const handleModelChange = (e) => {
+        setModel(e.target.value);
     };
 
     const handleAIRoleChange = (e) => {
@@ -79,7 +85,7 @@ const Setting = (props) => {
         const roleType= myCopilot==="no"?"system":"custom"
         const template = promptTemplates.find(t => t.name === myCopilot);
         const role = myCopilot==="no"?aiRole:template.PK
-        setAuthSettings({ authType, aiRole:role,roleType })
+        setAuthSettings({ authType, aiRole:role,model,roleType })
         setCallerValue("")
         setIsOpen(false)
         
@@ -194,6 +200,16 @@ const Setting = (props) => {
                                 <Select value={authType} id="auth-type" onChange={handleAuthTypeChange}>
                                     <option value="IAMROLE">IAM ROLE/SharedProfile</option>
                                 </Select>
+                                <br />
+                                {t('Model')}
+                                <Select value={model} id="model" onChange={handleModelChange}>
+                                    <option value="anthropic.claude-instant-v1">Claude Instant</option> 
+                                    <option value="anthropic.claude-v2">Claude2</option>    
+                                    <option value="anthropic.claude-v2:1">Claude2.1</option>
+                                    <option value="mistral.mistral-7b-instruct-v0:2">Mistral 7B</option>
+                                    <option value="mistral.mixtral-8x7b-instruct-v0:1">Mistral 8x7B</option>
+                                </Select>
+
                                 <Box mt="20px">
                                     {t('Caller Identity')}: {callerValue}
                                 </Box>

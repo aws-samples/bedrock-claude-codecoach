@@ -15,7 +15,7 @@ import {runResult} from "../../state";
 
 
 
-export const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || '';
+export const baseURL = process.env.API_SERVER_URL || '';
 
 interface ExcuteCodeProps {
   language: string;

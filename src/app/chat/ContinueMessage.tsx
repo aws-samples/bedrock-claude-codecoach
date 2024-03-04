@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState} from "react";
-import {Icon, IconButton,Spinner } from "@chakra-ui/react";
+import {Icon, Spinner } from "@chakra-ui/react";
 
 import { BiLogoAws} from "react-icons/bi";
 import ReactMarkdown from 'react-markdown'
@@ -16,7 +16,7 @@ interface ChatMessage {
     question: string
     reply: string
   }
-  const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || '';
+  const baseURL = process.env.API_SERVER_URL || '';
 
 
 function getBashMarkdown(text: string) {

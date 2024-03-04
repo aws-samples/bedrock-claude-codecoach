@@ -3,9 +3,9 @@ import piston from "piston-client";
 
 
 
-const pistonURL = process.env.NETX_PUBLIC_PISTON_SERVER_URL || 'http://api:2000';
-const pistonRunTimeout = process.env.NETX_PUBLIC_PISTON_RUN_TIMEOUT || 30000;
-const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || 'http://localhost:3000'
+const pistonURL = process.env.PISTON_SERVER_URL || 'http://api:2000';
+const pistonRunTimeout = process.env.PISTON_RUN_TIMEOUT || 30000;
+const baseURL = process.env.API_SERVER_URL || 'http://localhost:3000'
 
 const SUPPORTED_LANGUAGES = ["python","php","lua","typescript","go","awscli","sqlite3","rust","bash"]
 

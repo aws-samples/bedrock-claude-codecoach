@@ -2,7 +2,7 @@
 'use client'
 
 
-export const baseURL = process.env.NETX_PUBLIC_API_SERVER_URL || '';
+export const baseURL = process.env.API_SERVER_URL || '';
 
 interface ChatMessage {
   question: string

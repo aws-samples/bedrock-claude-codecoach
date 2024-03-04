@@ -1,9 +1,7 @@
 import { BedrockRuntimeClient, InvokeModelWithResponseStreamCommand } from "@aws-sdk/client-bedrock-runtime"; // ES Modules import
 import { STS } from "@aws-sdk/client-sts";
 
-const AWSAuthType = process.env.AWS_AUTH_TYPE ?? ''
-const AWSAccessKeyId = process.env.AWS_ACCESSKEY ?? ''
-const AWSSecretAccessKey = process.env.AWS_SECRETACCESSKEY ?? ''
+
 const AWSRegion = process.env.AWS_REGION ?? 'us-east-1'
 
 interface AWSConfigWithCredentials {
@@ -40,12 +38,10 @@ const AWSConfig = (): AWSConfigReturnType => {
    
     return {
       region: AWSRegion,
-      // credentials: {
-      //   accessKeyId: AWSAccessKeyId,
-      //   secretAccessKey: AWSSecretAccessKey
-      // }
     }
 }
+
+
 
 
 class STSClient {
@@ -83,7 +79,7 @@ class BedrockClient {
 }
 
 
-export { AWSConfig, BedrockClient, STSClient };
+export { AWSConfig, BedrockClient, STSClient,AWSRegion };
 
 export type { AuthProps };
 

@@ -14,7 +14,7 @@ function generateSHA1(str: string): string {
 
 
 const dynamodbTableName =
-  process.env.NEXT_PUBLIC_DDB_TABLE || "bedrock-claude-codecoach";
+  process.env.DDB_TABLE || "bedrock-claude-codecoach";
 const client = new DynamoDBClient(AWSConfig())
 
 /**

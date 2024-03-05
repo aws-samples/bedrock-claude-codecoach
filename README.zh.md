@@ -2,7 +2,7 @@
 
 
 
-本项目是使用Amazon Bedrock和Anthropic公司的[Claude 2](https://www.anthropic.com/index/claude-2)大语言模型构建的一个代码助手，它包括***代码生成功能，代码执行功能，提示词模版编辑器***，支持***python, golang , nodejs, php,rust***语言的执行、编译、运行，而且这些环境内置了Amazon Web Service SDK。我们希望通过这个示例项目帮助大家了解 [Amazon Bedrock](https://aws.amazon.com/bedrock/) , Claude2的开发流程，提供开箱即用的组件，同时也希望这个项目可以帮助开发人员编写高效、高质量的代码,尤其是生成Amazon Web Service SDK的相关代码。
+本项目是使用Amazon Bedrock和Anthropic公司的[Claude 2](https://www.anthropic.com/index/claude-2)大语言模型构建的一个代码助手，它包括***代码生成功能，代码执行功能，提示词模版编辑器***，支持***python, golang , nodejs, php,rust***语言的执行、编译、运行，而且这些环境内置了Amazon Web Service SDK。我们希望通过这个示例项目帮助大家了解 [Amazon Bedrock](https://aws.amazon.com/bedrock/) , Claude2, Mistral 7B的开发流程，提供开箱即用的组件，同时也希望这个项目可以帮助开发人员编写高效、高质量的代码,尤其是生成Amazon Web Service SDK的相关代码。
 
 
 
@@ -19,8 +19,6 @@ It's an architecture built on AWS managed services, eliminating the need for inf
 
 
 
-
-
 ## 演示
 
 https://github.com/stevensu1977/amazon-bedrock-coding-coach/assets/6694421/e59c7c1f-5054-4f3a-8729-970d6f57af11
@@ -31,7 +29,9 @@ CodeCoach 演示视频链接:
 
 
 
+模型:  Claude Instant, Claude2/2.1, Claude3 Connect,  Mistral 7B, Mixtral 8x7B
 
+![prompteditor](./images/models.png)
 
 提示词编辑器
 

@@ -2,7 +2,7 @@
 
 [中文版](./README.zh.md)
 
-This repository is a sample code coach(include code interpreter ) using the Anthropic company's LLM [Claude 2](https://www.anthropic.com/index/claude-2), one of the foundational models provided by [Amazon Bedrock](https://aws.amazon.com/bedrock/) for generative AI. This sample is an innovative tool designed to assist developers in writing efficient and high-quality code .
+This repository is a sample code coach(include code interpreter ) using the Anthropic company's LLM [Claude 2](https://www.anthropic.com/index/claude-2), [Mistral](https://aws.amazon.com/bedrock/mistral/),  two of the foundational models provided by [Amazon Bedrock](https://aws.amazon.com/bedrock/) for generative AI. This sample is an innovative tool designed to assist developers in writing efficient and high-quality code .
 
 
 
@@ -31,7 +31,9 @@ CodeCoach Vimeo link:
 
 
 
+Model: Claude Instant, Claude2/2.1, Claude3 Connect,  Mistral 7B, Mixtral 8x7B
 
+![prompteditor](./images/models.png)
 
 Prompt Editor 
 

@@ -6,13 +6,21 @@ import { BedrockClient, AWSConfig} from '@utils/aws';
 import { PromptTemplate } from "@langchain/core/prompts";
 
 
+
+interface ContextMessage {
+  question: string;
+  reply: string;
+  costToken: number;
+}
+
+
 /**
  * Generate the payload for calling the AI model
  * @param {string} model - The name of the AI model to use 
  * @param {string} prompt - The prompt text to send to the AI model
  * @returns {Object} - The payload object
  */
-const generatePayload = (model: string, prompt: string) => {
+const generatePayload = (model: string, prompt: string,history:ContextMessage[]) => {
 
   // Create the default payload
   const defaultPayload = {
@@ -37,10 +45,18 @@ const generatePayload = (model: string, prompt: string) => {
   
   if(model.indexOf("claude-3-sonnet-20240229-v1:0") > -1){
     // Return payload for Claude3 model
+   
+   
+   const messages = history.map(item => {
+      return[ {role: "user", content: item.question },{ role: "assistant", content: item.reply }];
+    });
+
+    const flattenedHistory = messages.flatMap(item => item);
+
+
+    console.log(flattenedHistory)
    return {
-      "messages" : [
-        {"role": "user", "content": prompt}
-      ],
+      "messages" : [...flattenedHistory,{role: "user",content:prompt}],
       top_p: 0.9,
       temperature: 0.2,
       max_tokens:2048,
@@ -78,7 +94,7 @@ const getCompletion = async (model: string, role: string, query: string, history
 
     // Format prompt based on role  
     let prompt;
-    if (role === 'RAW' || isClaude3) {
+    if (role === 'RAW'|| isClaude3||isMistral) {
       prompt = query;
     } else {
       prompt = await promptTemplate.format({
@@ -88,12 +104,8 @@ const getCompletion = async (model: string, role: string, query: string, history
     }
 
 
-    if(isMistral){
-      prompt = query;
-    }
-
     // Generate payload
-    const payload = generatePayload(model, prompt);
+    const payload = generatePayload(model, prompt,history);
 
     // Log for debugging
     console.log(role, model, payload);

@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 
       const result = await client.execute({
         language: language,
-        //runTimeout: 25000,
+        runTimeout: pistonRunTimeout,
       }, code);
 
       if (result.run?.stderr===""&& result.run?.stdout!==""&&question){

@@ -55,6 +55,14 @@ add_users(){
               AttributeName=SK,KeyType=RANGE \
           --provisioned-throughput \
               ReadCapacityUnits=5,WriteCapacityUnits=5
+      #create GSI for prompt template
+      aws dynamodb update-table \
+          --table-name bedrock-claude-codecoach \
+          --attribute-definitions AttributeName=SK,AttributeType=S \
+          --global-secondary-index-updates \
+              "[{\"Create\":{\"IndexName\": \"SK-Index\",\"KeySchema\":[{\"AttributeName\":\"SK\",\"KeyType\":\"HASH\"}], \
+              \"Projection\":{\"ProjectionType\":\"ALL\"}, \
+              \"ProvisionedThroughput\": {\"ReadCapacityUnits\":5,\"WriteCapacityUnits\":5}}}]" 
   fi
   password_hash=$(echo -n $password | openssl dgst -sha256 -hex | sed 's/^.* //')
 #  role=$(expr ${role} == "admin"?"admin":"guest")

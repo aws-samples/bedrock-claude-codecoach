@@ -46,6 +46,7 @@ add_users(){
   aws dynamodb list-tables | grep "${table_name}" >/dev/null 2>&1
   if [ $? -eq 1 ]; then
       aws dynamodb create-table \
+          --no-cli-pager \
           --table-name bedrock-claude-codecoach \
           --attribute-definitions \
               AttributeName=PK,AttributeType=S \
@@ -56,7 +57,9 @@ add_users(){
           --provisioned-throughput \
               ReadCapacityUnits=5,WriteCapacityUnits=5
       #create GSI for prompt template
+      sleep 10s
       aws dynamodb update-table \
+          --no-cli-pager \
           --table-name bedrock-claude-codecoach \
           --attribute-definitions AttributeName=SK,AttributeType=S \
           --global-secondary-index-updates \
@@ -67,6 +70,7 @@ add_users(){
   password_hash=$(echo -n $password | openssl dgst -sha256 -hex | sed 's/^.* //')
 #  role=$(expr ${role} == "admin"?"admin":"guest")
   aws dynamodb put-item \
+      --no-cli-pager \
       --table-name bedrock-claude-codecoach \
       --item \
           "{\"PK\": {\"S\": \"${email}\"},\"SK\": {\"S\": \"#ACC\"}, \"password\": {\"S\": \"${password_hash}\"}, \"role\": {\"S\": \"${role}\"}}"

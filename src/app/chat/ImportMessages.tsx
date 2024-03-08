@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { IconButton, Input } from "@chakra-ui/react";
-import { MdOutlineFileDownload, MdOutlineFileUpload } from "react-icons/md";
+import {  MdOutlineFileUpload } from "react-icons/md";
 import { useSetRecoilState } from 'recoil';
 import { chatMessagesState } from "../../state"
 

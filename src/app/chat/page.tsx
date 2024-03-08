@@ -3,8 +3,9 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil';
 
-import {useDebouncedCallback } from 'use-debounce';
+import { useDebouncedCallback } from 'use-debounce';
 import { chatMessagesState } from "../../state"
+
 
 import {
   useColorMode,
@@ -21,7 +22,7 @@ import {
 } from '@chakra-ui/react'
 
 import { FaRegCopy } from "react-icons/fa"
-import { BsRobot,BsArrowUpSquare,BsArrowDownSquare } from "react-icons/bs";
+import { BsRobot, BsArrowUpSquare, BsArrowDownSquare } from "react-icons/bs";
 // import { BiDollarCircle } from "react-icons/bi"
 
 import ReactMarkdown from 'react-markdown'
@@ -32,34 +33,36 @@ import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
 
 import fetchRequest from '@utils/fetch';
 
-import {countTokens} from "@utils/anthropictoken";
+import { countTokens } from "@utils/anthropictoken";
 
 
-import {runResult,authSettings,authState} from "../../state";
+import { runResult, authSettings, authState } from "../../state";
 
 
-import CleanMessages, {CleanMessagesByIndex} from "./CleanMessages"
+import CleanMessages, { CleanMessagesByIndex } from "./CleanMessages"
 import ExportMessages from "./ExportMessages"
 import ImportMessages from './ImportMessages';
 import ExecuteCodeButton from "./ExecuteCode"
 import ContinueMessage from "./ContinueMessage";
 import { rebotoColor } from '@components/RobotIconColor';
+import ImageEncoder from '@components/ImageEncode';
+import ImportImage from './ImportImage';
 
 
 
 const baseURL = process.env.API_SERVER_URL || '';
 
-const supportedLanguages=process.env.SUPPORTED_LANGUAGES ||  ["python","php","lua","typescript","go","awscli","sqlite3","sql","rust"]
+const supportedLanguages = process.env.SUPPORTED_LANGUAGES || ["python", "php", "lua", "typescript", "go", "awscli", "sqlite3", "sql", "rust"]
 
 function supported(language) {
   return supportedLanguages.includes(language)
 }
 
-function languageChoice(language){
-  if (language==="bash"){
+function languageChoice(language) {
+  if (language === "bash") {
     return "awscli"
   }
-  if (language==="sql"){
+  if (language === "sql") {
     return "sqlite3"
   }
 
@@ -69,12 +72,12 @@ function languageChoice(language){
 
 const Chat = () => {
   const [messages, setMessages] = useRecoilState(chatMessagesState);
-  const authSettingsValue =useRecoilValue (authSettings)
-  const auth= useRecoilValue(authState)
+  const authSettingsValue = useRecoilValue(authSettings)
+  const auth = useRecoilValue(authState)
   const [isClient, setIsClient] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
-  const [alertText,setAlertText] =useState("");
-  const [alertStatus,setAlertStatus] =useState("success");
+  const [alertText, setAlertText] = useState("");
+  const [alertStatus, setAlertStatus] = useState("success");
 
   const messagesEnd = useRef<HTMLDivElement>(null);
   const chatInput = useRef<HTMLTextAreaElement>(null);
@@ -86,7 +89,9 @@ const Chat = () => {
   const { colorMode } = useColorMode()
   const isDark = colorMode === 'dark'
 
-  const [runResultValue,setRunResult]=useRecoilState(runResult);
+  const [image, setImage] = useState("");
+
+  const [runResultValue, setRunResult] = useRecoilState(runResult);
 
 
 
@@ -117,17 +122,17 @@ const Chat = () => {
     }
   };
 
-  const clearMessages=()=>{
+  const clearMessages = () => {
     setMessages([])
   }
 
-  const handlerShowAlert=(text:string,status?:string, timeout?:number)=>{
+  const handlerShowAlert = (text: string, status?: string, timeout?: number) => {
     setShowAlert(true)
     setAlertText(text)
-    setAlertStatus(status??"success")
+    setAlertStatus(status ?? "success")
     setTimeout(() => {
       setShowAlert(false);
-    }, timeout??3000);
+    }, timeout ?? 3000);
   }
 
 
@@ -136,19 +141,19 @@ const Chat = () => {
   }, [])
 
   useEffect(() => {
-     if (runResultValue!=""){
+    if (runResultValue != "") {
       setInputValue(runResultValue)
       sendMessage(runResultValue)
-      
-     }
-     return ()=>{setRunResult("")}
+
+    }
+    return () => { setRunResult("") }
 
   }, [runResultValue])
 
   const sendMessage = (message: string) => {
 
-    const token=countTokens(message)
-    setMessages([...messages, { question: message, reply: "",costToken:token }])
+    const token = countTokens(message)
+    setMessages([...messages, { question: message, reply: "", costToken: token }])
     onReply(message);
   }
 
@@ -166,7 +171,7 @@ const Chat = () => {
 
   };
 
-  const removeMessageByIndex=(index:number) =>{
+  const removeMessageByIndex = (index: number) => {
 
     setMessages((pre) => {
 
@@ -181,8 +186,8 @@ const Chat = () => {
   }
 
   function CodeCopyBtn({ children }: any) {
-   
-    
+
+
     const handleClick = () => {
       navigator.clipboard.writeText(children.props.children);
       setShowAlert(true);
@@ -199,19 +204,19 @@ const Chat = () => {
           position: "absolute",
         }}>
 
-        <IconButton aria-label='Copy this code' icon={<FaRegCopy/>} onClick={handleClick} />
+        <IconButton aria-label='Copy this code' icon={<FaRegCopy />} onClick={handleClick} />
       </div>
     )
   }
 
- interface CodeExecuteBtnProps {
-  children:any,
-  setChildren:any,
-  language: string
- }
+  interface CodeExecuteBtnProps {
+    children: any,
+    setChildren: any,
+    language: string
+  }
 
-  function CodeExecuteBtn({ children, language,setChildren}: CodeExecuteBtnProps) {
-    
+  function CodeExecuteBtn({ children, language, setChildren }: CodeExecuteBtnProps) {
+
     return (
       <div className="code-copy-btn"
         style={{
@@ -237,7 +242,7 @@ const Chat = () => {
   const onReply = async (value: string) => {
     try {
 
-      const token=countTokens(value)
+      const token = countTokens(value)
       console.log(`use token ${token}`)
 
       setAiThinking(true);
@@ -247,15 +252,16 @@ const Chat = () => {
       const history = messages.slice(-5)
 
 
-      res = await fetchRequest("POST",`${baseURL}/api/bedrock/completion`, btoa(JSON.stringify(authSettingsValue)), {
+      res = await fetchRequest("POST", `${baseURL}/api/bedrock/completion`, btoa(JSON.stringify(authSettingsValue)), {
         query: value,
         history: history,
         role: authSettingsValue.aiRole,
         roleType: authSettingsValue.roleType,
-        model: authSettingsValue.model
+        model: authSettingsValue.model,
+        image: image,
 
-      }  );
-      if (res.status!==200){
+      });
+      if (res.status !== 200) {
         setAiThinking(false);
         updateMessageList("Please check your auth settings")
         return
@@ -281,18 +287,18 @@ const Chat = () => {
 
         } else {
           console.log(chunkValue);
-          if (authSettingsValue.aiRole==="AUTOGEN"){
-            if (chunkValue.indexOf("user_proxy")===-1&&chunkValue.trim().endsWith("TERMINATE")===false){
+          if (authSettingsValue.aiRole === "AUTOGEN") {
+            if (chunkValue.indexOf("user_proxy") === -1 && chunkValue.trim().endsWith("TERMINATE") === false) {
               updateMessageList(chunkValue)
               updateMessageList("")
             }
-          }else{
+          } else {
             updateMessageList(chunkValue)
           }
         }
         scrollToBottom()
       }
-     
+
     } catch (error) {
       setAiThinking(false);
       console.log(error);
@@ -333,9 +339,9 @@ const Chat = () => {
             <Box key={index} pt="50px">
 
               <Flex alignContent={"right"} justifyContent={"right"}>
-                <Box p='2' bg={isDark?"blue.300":"gray.100"} rounded={"8px"}>
-               
-                <ReactMarkdown>{m.question}</ReactMarkdown>
+                <Box p='2' bg={isDark ? "blue.300" : "gray.100"} rounded={"8px"}>
+
+                  <ReactMarkdown>{m.question}</ReactMarkdown>
                 </Box>
                 <Box p='2' >
                   You
@@ -343,9 +349,9 @@ const Chat = () => {
 
               </Flex>
               <Box mt="20px"><CleanMessagesByIndex index={index} cleanMessageByIndxe={removeMessageByIndex} />
-              
-              <Icon as={BsRobot} boxSize="24px" color={rebotoColor(isDark,authSettingsValue.roleType,authSettingsValue.aiRole)} />{aiThinking&&<Spinner size='sm'/>} 
-              {/* {!aiThinking&&m.costToken&&<Button leftIcon={<BiDollarCircle />} variant='solid' size={"xs"}>Token Cost : {m.costToken}</Button>} */}
+
+                <Icon as={BsRobot} boxSize="24px" color={rebotoColor(isDark, authSettingsValue.roleType, authSettingsValue.aiRole)} />{aiThinking && <Spinner size='sm' />}
+                {/* {!aiThinking&&m.costToken&&<Button leftIcon={<BiDollarCircle />} variant='solid' size={"xs"}>Token Cost : {m.costToken}</Button>} */}
               </Box>
               <Box ml="30px"  >
                 <ReactMarkdown
@@ -355,17 +361,17 @@ const Chat = () => {
                     pre: Pre,
                     code({ node, className, children, ...props }) {
                       const match = /language-(\w+)/.exec(className || '')
-                      const [codeChildren, setCodeChildren]=useState(String(children).replace(/\n$/, ''))
+                      const [codeChildren, setCodeChildren] = useState(String(children).replace(/\n$/, ''))
                       return match ? (
                         <>
-                        {(supported(match[1]))&&<CodeExecuteBtn language={languageChoice(match[1])} children={codeChildren} setChildren={setCodeChildren}/>}
-                        <SyntaxHighlighter
-                          {...props}
-                          children={codeChildren}
-                          style={oneDark}
-                          language={match[1]}
-                          PreTag="div"
-                        />
+                          {(supported(match[1])) && <CodeExecuteBtn language={languageChoice(match[1])} children={codeChildren} setChildren={setCodeChildren} />}
+                          <SyntaxHighlighter
+                            {...props}
+                            children={codeChildren}
+                            style={oneDark}
+                            language={match[1]}
+                            PreTag="div"
+                          />
                         </>
 
                       ) : (
@@ -376,40 +382,40 @@ const Chat = () => {
                     }
                   }}
                 />
-              {authSettingsValue.aiRole==="AWSCLICOACH"&&!aiThinking&&<>
-              <ContinueMessage question={m.question} reply={m.reply}/>
-               
-              </>}
+                {authSettingsValue.aiRole === "AWSCLICOACH" && !aiThinking && <>
+                  <ContinueMessage question={m.question} reply={m.reply} />
+
+                </>}
               </Box>
             </Box>
 
           )}
         </Box>
-     <Flex  ml="40px" direction="column" justify="center" align="center">
-     <IconButton
+        <Flex ml="40px" direction="column" justify="center" align="center">
+          <IconButton
             aria-label='goto top'
             right={4}
-            icon={ <BsArrowUpSquare/>}
+            icon={<BsArrowUpSquare />}
             colorScheme="green"
-            onClick={(e)=>{scrollToTop()}}
-            />
-       <Box h="1rem" />
-      <CleanMessages clearMessages={clearMessages} />
-      <Box h="1rem" />
-      <ExportMessages messages={messages} />
-      <Box h="1rem" />
-      <ImportMessages ></ImportMessages>
-      <Box h="1rem" />
-      <IconButton
+            onClick={(e) => { scrollToTop() }}
+          />
+          <Box h="1rem" />
+          <CleanMessages clearMessages={clearMessages} />
+          <Box h="1rem" />
+          <ExportMessages messages={messages} />
+          <Box h="1rem" />
+          <ImportMessages ></ImportMessages>
+          <Box h="1rem" />
+          <IconButton
             right={4}
-            icon={ <BsArrowDownSquare/>}
+            icon={<BsArrowDownSquare />}
             aria-label="Toggle Theme"
             colorScheme="green"
-            onClick={(e)=>{
+            onClick={(e) => {
               scrollToBottom()
             }}
-            />
-    </Flex>
+          />
+        </Flex>
       </Flex>
 
       <Flex
@@ -417,28 +423,41 @@ const Chat = () => {
         p={8}
       >
         <Textarea
-                  ref={ chatInput }
-                  placeholder={`Enter here ......`}
-                  ml="-50px"
-                  size="md"
-                  resize="none"
-                  rows={3}
-                  w="70vw"
-                  bg={isDark?"":"gray.200"}
-                  variant="brandPrimary"
-                  onChange={(e) => debounced(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      if (chatInput.current&&chatInput.current.value){
-                        sendMessage(chatInput.current.value);
-                        chatInput.current.value="";
-                      }
-                    }
-                  }}
-                />
+          ref={chatInput}
+          placeholder={`Enter here ......`}
+          ml="-50px"
+          size="md"
+          resize="none"
+          rows={3}
+          w="70vw"
+          bg={isDark ? "" : "gray.200"}
+          variant="brandPrimary"
+          onChange={(e) => debounced(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              if (chatInput.current && chatInput.current.value) {
+                sendMessage(chatInput.current.value);
+                chatInput.current.value = "";
+              }
+            }
+          }}
+        />
+
+
       </Flex>
-      
+
+      {authSettingsValue.model.indexOf("claude-3") > -1 && (
+        <Flex
+          justifyContent={"center"}
+          p={8}
+        >
+          <ImportImage onImageChangeHandler={(calude3Image) => {
+            setImage(JSON.stringify(calude3Image))
+          }} />
+        </Flex>
+      )}
     </Flex>
+
   )
 }
 

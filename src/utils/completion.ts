@@ -20,7 +20,7 @@ interface ContextMessage {
  * @param {string} prompt - The prompt text to send to the AI model
  * @returns {Object} - The payload object
  */
-const generatePayload = (model: string, role:string, prompt: string,history:ContextMessage[]) => {
+const generatePayload = (model: string, role:string, prompt: string,image:string, history:ContextMessage[]) => {
 
   // Create the default payload
   const defaultPayload = {
@@ -55,8 +55,13 @@ const generatePayload = (model: string, role:string, prompt: string,history:Cont
 
     console.log(flattenedHistory)
 
-    let messagesArray =[...flattenedHistory,{role: "user",content:prompt}] 
+    let messagesArray =[] 
 
+    if (image!=""){
+     messagesArray =[...flattenedHistory,{role: "user",content:[JSON.parse(image), {"type": "text", "text": prompt}]}] 
+    }else{
+      messagesArray =[...flattenedHistory,{role: "user",content:prompt}] 
+    }
 
     let payload= {
       "messages" : messagesArray,
@@ -93,7 +98,7 @@ const generatePayload = (model: string, role:string, prompt: string,history:Cont
 * @param {WritableStreamDefaultWriter} writer - Writable stream to write response 
 * @param {PromptTemplate} promptTemplate - Template to format prompt for model 
 */
-const getCompletion = async (model: string, role: string, query: string, history, writer, promptTemplate) => {
+const getCompletion = async (model: string, role: string, query: string,image:string, history, writer, promptTemplate) => {
 
   try {
     // Stringify history for prompt
@@ -117,7 +122,7 @@ const getCompletion = async (model: string, role: string, query: string, history
 
 
     // Generate payload
-    const payload = generatePayload(model,role, prompt,history);
+    const payload = generatePayload(model,role, prompt,image,history);
 
     // Log for debugging
     console.log(role, model, payload);

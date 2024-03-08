@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
    
 
-    const { query, history, role,roleType,model } = await req.json()
+    const { query, history, role,roleType,model,image } = await req.json()
 
 
     console.log(authPayload,model)
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
 
     
 
-    getCompletion(model,role ?? "CODECOACH", query ?? "Hello LLM", history ?? [], writer,await GetPrompByRole(role ?? "CODECOACH", roleType));
+    getCompletion(model,role ?? "CODECOACH", query ?? "Hello LLM",image??"", history ?? [], writer,await GetPrompByRole(role ?? "CODECOACH", roleType));
     
     return new Response(stream.readable, {
       status: 200,

@@ -9,7 +9,8 @@ import {
     Heading,
     HStack,
     Spinner,
-    Select
+    Select,
+    IconButton
 } from '@chakra-ui/react';
 
 import ReactMarkdown from 'react-markdown';
@@ -20,6 +21,7 @@ import { promptEditorResult, authSettings, authState } from "../../state";
 import { CustomPromptTemplate, LoadPrompt } from '@utils/prompt';
 import fetchRequest from '@utils/fetch';
 import { useTranslation } from 'react-i18next';
+import ImageEncoder from '@components/ImageEncode';
 
 interface MarkdownEditorProps {
     onChange: (value: string) => void;
@@ -71,6 +73,10 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     const [claude3SystemRole, setClaude3SystemRole] = useState("");
 
     const selectRef = useRef<HTMLSelectElement>(null);
+
+    const [image, setImage]=useState("");
+
+    
 
     const { t,i18n} = useTranslation();
 
@@ -164,7 +170,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 history: [],
                 role: claude3SystemRole===""?authSettingsValue.roleType:claude3SystemRole,
                 model: authSettingsValue.model,
-
+                image: image,
             });
             if (res.status !== 200) {
                 console.log("error", res.status)
@@ -308,15 +314,26 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             </Box>
 
             
-            {authSettingsValue.model.indexOf("claude-3")>-1&&(<Box mt={2} display="flex" alignItems="center"
+            {authSettingsValue.model.indexOf("claude-3")>-1&&(<><Box mt={2} display="flex" alignItems="center"
             >
                  {t('Claude3 System Role')}
               <Box  mt={"15px"}> &nbsp; <Input width={"600px"} value={claude3SystemRole} onChange={(e) => {
                             console.log(e.target.value)
                             setClaude3SystemRole(e.target.value)
                         }} />
+
+                      
             </Box>
+           
             </Box>
+            <Box mt={2}
+            > Image:  <ImageEncoder onImageChangeHandler={(calude3Image)=>{
+                setImage(JSON.stringify(calude3Image))
+            }}/>
+            </Box>
+
+            
+            </>
             )}
                 
             <Box mt={4}

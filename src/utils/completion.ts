@@ -20,7 +20,7 @@ interface ContextMessage {
  * @param {string} prompt - The prompt text to send to the AI model
  * @returns {Object} - The payload object
  */
-const generatePayload = (model: string, prompt: string,history:ContextMessage[]) => {
+const generatePayload = (model: string, role:string, prompt: string,history:ContextMessage[]) => {
 
   // Create the default payload
   const defaultPayload = {
@@ -53,15 +53,27 @@ const generatePayload = (model: string, prompt: string,history:ContextMessage[])
 
     const flattenedHistory = messages.flatMap(item => item);
 
-
     console.log(flattenedHistory)
-   return {
-      "messages" : [...flattenedHistory,{role: "user",content:prompt}],
+
+    let messagesArray =[...flattenedHistory,{role: "user",content:prompt}] 
+
+
+    let payload= {
+      "messages" : messagesArray,
       top_p: 0.9,
       temperature: 0.2,
       max_tokens:2048,
       anthropic_version:"bedrock-2023-05-31"
     }
+
+
+    if (role!=="system"){
+      payload["system"] = role
+    } 
+
+    return payload
+  
+
   }
 
     // Return default payload 
@@ -105,7 +117,7 @@ const getCompletion = async (model: string, role: string, query: string, history
 
 
     // Generate payload
-    const payload = generatePayload(model, prompt,history);
+    const payload = generatePayload(model,role, prompt,history);
 
     // Log for debugging
     console.log(role, model, payload);

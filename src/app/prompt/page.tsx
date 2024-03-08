@@ -67,13 +67,14 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     const [promptName, setPrompName] = useState("");
     const [selectedPromptName, setSelectedPrompName] = useState("no");
     const [isClient, setIsClient] = useState(false);
+    
+    const [claude3SystemRole, setClaude3SystemRole] = useState("");
 
     const selectRef = useRef<HTMLSelectElement>(null);
 
     const { t,i18n} = useTranslation();
 
-
-
+   
 
 
     //const [promptTemplates, setPromptTemplates] = useRecoilState(promptTemplateState);
@@ -161,11 +162,13 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             const res: Response = await fetchRequest("POST", `/api/bedrock/completion`, btoa(JSON.stringify(authSettingsValue)), {
                 query: value,
                 history: [],
-                role: "RAW",
+                role: claude3SystemRole===""?authSettingsValue.roleType:claude3SystemRole,
+                model: authSettingsValue.model,
 
             });
             if (res.status !== 200) {
                 console.log("error", res.status)
+                setSubmitting(false)
                 return
             }
             const reader = res?.body?.getReader() as ReadableStreamDefaultReader;
@@ -195,7 +198,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
         } catch (error) {
             console.log(error);
-
+            setSubmitting(false)
         } finally {
             setSubmitting(false)
         }
@@ -297,11 +300,29 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
 
             </Box>
- 
+            
 
             <Box mt={4}
             >
-                {t('Prompt Parameters')} :
+              Model:  {authSettingsValue.model}  
+            </Box>
+
+            
+            {authSettingsValue.model.indexOf("claude-3")>-1&&(<Box mt={2} display="flex" alignItems="center"
+            >
+                 {t('Claude3 System Role')}
+              <Box  mt={"15px"}> &nbsp; <Input width={"600px"} value={claude3SystemRole} onChange={(e) => {
+                            console.log(e.target.value)
+                            setClaude3SystemRole(e.target.value)
+                        }} />
+            </Box>
+            </Box>
+            )}
+                
+            <Box mt={4}
+            >
+                
+                {t('Prompt Parameters')}
                 {keys.map((key) => {
 
                     return <Box key={key} mt={"15px"}>

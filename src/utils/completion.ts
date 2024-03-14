@@ -36,14 +36,14 @@ const generatePayload = (model: string, role:string, prompt: string,image:string
     // Return payload for Mistral model
     return {
       prompt,
-      temperature: 0.2,
+      temperature: 0.1,
       top_p: 0.9,
       max_tokens: 2048
     };
 
   }
   
-  if(model.indexOf("claude-3-sonnet-20240229-v1:0") > -1){
+  if(model.indexOf("claude-3") > -1){
     // Return payload for Claude3 model
    
    
@@ -106,7 +106,7 @@ const getCompletion = async (model: string, role: string, query: string,image:st
 
     // Check if Mistral model
     const isMistral = model.indexOf('mistral') > -1;
-    const isClaude3 = model.indexOf('claude-3-sonnet-20240229-v1:0') > -1;
+    const isClaude3 = model.indexOf('claude-3') > -1;
 
 
     // Format prompt based on role  

@@ -8,6 +8,8 @@ const { persistAtom } = recoilPersist()
 
 interface ChatMessage {
     question: string;
+    image?:string;
+    file?:string;
     reply: string;
     costToken?:number;
   }
@@ -43,10 +45,12 @@ const promptEditorResult =atom({
 })
 
 
-const authSettings =atom({
-  key: 'authSettings',
-  default: {"authType":"IAMROLE","aiRole":"CODECOACH","roleType":"system","model":"anthropic.claude-v2"},
+const awsProviderSettings =atom({
+  key: 'awsProviderSettings',
+  default: {"authType":"IAMROLE","aiRole":"CODECOACH","roleType":"system","model":"anthropic.claude-3-sonnet-20240229-v1:0"},
+  effects_UNSTABLE: [persistAtom]
 })
+
 
 const languageState =atom({
   key: 'languageState',
@@ -67,4 +71,4 @@ const promptTemplateState = atom<PromptTemplate[]>({
   });
 
 
-export {languageState,nameState, authState,runResult,authSettings,chatMessagesState,promptEditorResult, promptTemplateState}
+export {languageState,nameState, authState,runResult,awsProviderSettings,chatMessagesState,promptEditorResult, promptTemplateState}

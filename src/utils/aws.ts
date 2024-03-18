@@ -3,6 +3,8 @@ import { STS } from "@aws-sdk/client-sts";
 
 
 const AWSRegion = process.env.AWS_REGION ?? 'us-west-2'
+const DefaultLLMModel=process.env.DEFAULT_LLM_MODEL ??"anthropic.claude-3-sonnet-20240229-v1:0"
+
 
 interface AWSConfigWithCredentials {
   region: string
@@ -79,7 +81,7 @@ class BedrockClient {
 }
 
 
-export { AWSConfig, BedrockClient, STSClient,AWSRegion };
+export { AWSConfig, BedrockClient, STSClient,AWSRegion,DefaultLLMModel };
 
 export type { AuthProps };
 

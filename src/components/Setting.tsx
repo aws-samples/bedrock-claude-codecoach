@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 import { BsRobot } from "react-icons/bs";
 
 import { useRecoilState, useRecoilValue } from "recoil";
-import { authSettings, authState } from "../state"
+import { awsProviderSettings, authState } from "../state"
 
 
 import { LoadPrompt } from "@utils/prompt";
@@ -31,6 +31,8 @@ interface Password {
     newPassword: string,
     newPasswordConfirm:string
 }
+
+
 
 const Setting = (props) => {
 
@@ -52,13 +54,13 @@ const Setting = (props) => {
     const [password, setPassword] = useState<Password>({oldPassword:"",newPassword:"",newPasswordConfirm:""})
 
     //RecoiValue State
-    const [authSettingsValue,setAuthSettings] = useRecoilState(authSettings)
+    const [awsProviderSettingsValue,setAwsProviderSettings] = useRecoilState(awsProviderSettings)
     const auth = useRecoilValue(authState)
    
-
+    
     const [authType, setAuthType] = useState(auth.role === "admin" ? "IAMROLE" : "AKSK");
    
-    const [model, setModel] = useState(auth.model );
+    const [model, setModel] = useState(awsProviderSettingsValue.model );
 
     const {t} = useTranslation();
 
@@ -85,7 +87,7 @@ const Setting = (props) => {
         const roleType= myCopilot==="no"?"system":"custom"
         const template = promptTemplates.find(t => t.name === myCopilot);
         const role = myCopilot==="no"?aiRole:template.PK
-        setAuthSettings({ authType, aiRole:role,model,roleType })
+        setAwsProviderSettings({ authType, aiRole:role,model,roleType })
         setCallerValue("")
         setIsOpen(false)
         
@@ -118,7 +120,7 @@ const Setting = (props) => {
 
     const  handleSavePasswordClick = async () => {
         try {
-            const res: Response = await fetchRequest("POST", `/api/password`, btoa(JSON.stringify(authSettingsValue)), {
+            const res: Response = await fetchRequest("POST", `/api/password`, btoa(JSON.stringify(awsProviderSettingsValue)), {
                 oldPassword:password.oldPassword,
                 newPassword: password.newPassword,
             });
@@ -150,7 +152,7 @@ const Setting = (props) => {
     }
 
     const getPrompt = async () => {
-        const result = await LoadPrompt(authSettingsValue)
+        const result = await LoadPrompt(awsProviderSettingsValue)
         console.log(result)
         setPromptTemplates([...result])
 
@@ -201,7 +203,7 @@ const Setting = (props) => {
                                     <option value="IAMROLE">IAM ROLE/SharedProfile</option>
                                 </Select>
                                 <br />
-                                {t('Model')}
+                                {t('Model')} {model}
                                 <Select value={model} id="model" onChange={handleModelChange}>
                                     <option value="anthropic.claude-instant-v1">Claude Instant</option> 
                                     <option value="anthropic.claude-v2">Claude2</option>    

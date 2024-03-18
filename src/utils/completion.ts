@@ -5,7 +5,7 @@ import { BedrockClient, AWSConfig} from '@utils/aws';
 
 import { PromptTemplate } from "@langchain/core/prompts";
 
-
+import { ContentLoader,FileInputProps } from './loader';
 
 interface ContextMessage {
   question: string;
@@ -20,7 +20,7 @@ interface ContextMessage {
  * @param {string} prompt - The prompt text to send to the AI model
  * @returns {Object} - The payload object
  */
-const generatePayload = (model: string, role:string, prompt: string,image:string, history:ContextMessage[]) => {
+const generatePayload = (model: string, role:string, prompt: string,image:string, history:ContextMessage[],context:string) => {
 
   // Create the default payload
   const defaultPayload = {
@@ -53,15 +53,18 @@ const generatePayload = (model: string, role:string, prompt: string,image:string
 
     const flattenedHistory = messages.flatMap(item => item);
 
-    console.log(flattenedHistory)
+    console.log(messages, flattenedHistory)
 
     let messagesArray =[] 
+     
 
-    if (image!=""){
-     messagesArray =[...flattenedHistory,{role: "user",content:[JSON.parse(image), {"type": "text", "text": prompt}]}] 
+    if (image!=""&&image!="null"){
+     messagesArray =[...flattenedHistory,{role: "user",content:[JSON.parse(image), {"type": "text", "text": `Context: ${context}`},{"type": "text", "text": prompt}]}] 
     }else{
-      messagesArray =[...flattenedHistory,{role: "user",content:prompt}] 
+      messagesArray =[...flattenedHistory,{role: "user",content:[{"type": "text", "text": `Context: ${context}`},{"type": "text", "text": prompt}]}] 
     }
+
+   
 
     let payload= {
       "messages" : messagesArray,
@@ -98,7 +101,7 @@ const generatePayload = (model: string, role:string, prompt: string,image:string
 * @param {WritableStreamDefaultWriter} writer - Writable stream to write response 
 * @param {PromptTemplate} promptTemplate - Template to format prompt for model 
 */
-const getCompletion = async (model: string, role: string, query: string,image:string, history, writer, promptTemplate) => {
+const getCompletion = async (model: string, role: string, query: string,image:string,file:FileInputProps, history, writer, promptTemplate) => {
 
   try {
     // Stringify history for prompt
@@ -120,9 +123,16 @@ const getCompletion = async (model: string, role: string, query: string,image:st
       });
     }
 
+    let contents=""
+
+    if (file&&file!=null){
+       contents = await ContentLoader(file)
+       console.log("contents" , contents)
+    }
+
 
     // Generate payload
-    const payload = generatePayload(model,role, prompt,image,history);
+    const payload = generatePayload(model,role, prompt,image,history,contents);
 
     // Log for debugging
     console.log(role, model, payload);

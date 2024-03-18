@@ -63,7 +63,7 @@ add_users(){
           --table-name bedrock-claude-codecoach \
           --attribute-definitions AttributeName=SK,AttributeType=S \
           --global-secondary-index-updates \
-              "[{\"Create\":{\"IndexName\": \"SK-Index\",\"KeySchema\":[{\"AttributeName\":\"SK\",\"KeyType\":\"HASH\"}], \
+              "[{\"Create\":{\"IndexName\": \"SK-index\",\"KeySchema\":[{\"AttributeName\":\"SK\",\"KeyType\":\"HASH\"}], \
               \"Projection\":{\"ProjectionType\":\"ALL\"}, \
               \"ProvisionedThroughput\": {\"ReadCapacityUnits\":5,\"WriteCapacityUnits\":5}}}]" 
   fi

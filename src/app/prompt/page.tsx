@@ -17,7 +17,7 @@ import ReactMarkdown from 'react-markdown';
 import { useRecoilState, useRecoilValue } from 'recoil';
 
 
-import { promptEditorResult, authSettings, authState } from "../../state";
+import { promptEditorResult, awsProviderSettings, authState } from "../../state";
 import { CustomPromptTemplate, LoadPrompt } from '@utils/prompt';
 import fetchRequest from '@utils/fetch';
 import { useTranslation } from 'react-i18next';
@@ -58,7 +58,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     markdown
 }) => {
 
-    const authSettingsValue = useRecoilValue(authSettings)
+    const awsProviderSettingsValue= useRecoilValue(awsProviderSettings)
     const auth = useRecoilValue(authState)
 
     const [keys, setKeys] = useState<string[]>([]);
@@ -115,7 +115,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
     const getPrompt = async () => {
         
-        const result = await LoadPrompt(authSettingsValue)
+        const result = await LoadPrompt(awsProviderSettingsValue)
         console.log(result)
         setPromptTemplates([...result])
 
@@ -147,7 +147,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         addTemplate({ name: promptName, prompt: markdown })
         setSelectedPrompName(promptName)
         try {
-            const res: Response = await fetchRequest("POST", `/api/prompt`, btoa(JSON.stringify(authSettingsValue)), {
+            const res: Response = await fetchRequest("POST", `/api/prompt`, btoa(JSON.stringify(awsProviderSettingsValue)), {
                 name:promptName,
                 prompt: markdown,
             });
@@ -165,11 +165,11 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         try {
 
 
-            const res: Response = await fetchRequest("POST", `/api/bedrock/completion`, btoa(JSON.stringify(authSettingsValue)), {
+            const res: Response = await fetchRequest("POST", `/api/bedrock/completion`, btoa(JSON.stringify(awsProviderSettingsValue)), {
                 query: value,
                 history: [],
-                role: claude3SystemRole===""?authSettingsValue.roleType:claude3SystemRole,
-                model: authSettingsValue.model,
+                role: claude3SystemRole===""?awsProviderSettingsValue.roleType:claude3SystemRole,
+                model: awsProviderSettingsValue.model,
                 image: image,
             });
             if (res.status !== 200) {
@@ -226,7 +226,7 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         console.log(selected,template.PK)
         try {
 
-            const res: Response = await fetchRequest("DELETE", `/api/prompt`, btoa(JSON.stringify(authSettingsValue)), {
+            const res: Response = await fetchRequest("DELETE", `/api/prompt`, btoa(JSON.stringify(awsProviderSettingsValue)), {
                 promptID:template.PK
             });
             if (res.status !== 200) {
@@ -310,11 +310,11 @@ const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
             <Box mt={4}
             >
-              Model:  {authSettingsValue.model}  
+              Model:  {awsProviderSettingsValue.model}  
             </Box>
 
             
-            {authSettingsValue.model.indexOf("claude-3")>-1&&(<><Box mt={2} display="flex" alignItems="center"
+            {awsProviderSettingsValue.model.indexOf("claude-3")>-1&&(<><Box mt={2} display="flex" alignItems="center"
             >
                  {t('Claude3 System Role')}
               <Box  mt={"15px"}> &nbsp; <Input width={"600px"} value={claude3SystemRole} onChange={(e) => {

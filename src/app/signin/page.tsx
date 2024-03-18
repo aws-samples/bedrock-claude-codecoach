@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSetRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import { useRouter } from "next/navigation";
 import { useTranslation } from 'react-i18next'
+import {DefaultLLMModel} from "@utils/aws"
 
 import {
   Button,
@@ -21,7 +22,7 @@ import {
 } from "@chakra-ui/react";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 
-import { authState } from "../../state";
+import { awsProviderSettings, authState } from "../../state";
 import AlertInfo from "../../components/AlertInfo";
 
 interface User {
@@ -58,6 +59,11 @@ const SigninScreen = () => {
   const router = useRouter();
   const setAuthState = useSetRecoilState(authState);
 
+  const [awsProviderSettingsValue,setAwsProviderSettings] = useRecoilState(awsProviderSettings)
+
+  
+
+
   const {t} = useTranslation();
 
   const handIsOpen = (open: boolean) => {
@@ -78,7 +84,8 @@ const SigninScreen = () => {
     );
     Post(user).then((res) => {
       if ("role" in res) {
-        setAuthState(res);
+        setAuthState({...res});
+        setAwsProviderSettings({ ...awsProviderSettingsValue,model:DefaultLLMModel })
         setAuth(true);
         console.log("Redirect to chat!");
       } else {

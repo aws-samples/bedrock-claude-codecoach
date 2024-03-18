@@ -30,19 +30,8 @@ export default function CallToActionWithIllustration() {
   
   const [isClient, setIsClient] = useState(false)
   const { t,i18n} = useTranslation();
-  const [language, setLanguage] =useState("en")
 
-  const handChangeLanguge =()=>{
-    if (language === "en") {
-      setLanguage("zh")
-      i18n.changeLanguage(language)
-    }else{
-      setLanguage("en")
-      i18n.changeLanguage(language)
-    }
 
-    
-  }
   useEffect(() => {
     setIsClient(true)
   }, [])

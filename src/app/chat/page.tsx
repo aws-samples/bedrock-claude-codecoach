@@ -12,16 +12,23 @@ import {
   Alert,
   AlertIcon,
   Button,
+  Image as ChakraImage,
   Box,
   Flex,
   Icon,
   IconButton,
   Textarea,
   Stack,
-  Spinner
+  Spinner,
+  Card,
+  CardBody,
+  Text,
+  Tooltip
 } from '@chakra-ui/react'
 
 import { FaRegCopy } from "react-icons/fa"
+import { MdAttachFile } from "react-icons/md"
+
 import { BsRobot, BsArrowUpSquare, BsArrowDownSquare } from "react-icons/bs";
 // import { BiDollarCircle } from "react-icons/bi"
 
@@ -36,7 +43,7 @@ import fetchRequest from '@utils/fetch';
 import { countTokens } from "@utils/anthropictoken";
 
 
-import { runResult, authSettings, authState } from "../../state";
+import { runResult, awsProviderSettings, authState } from "../../state";
 
 
 import CleanMessages, { CleanMessagesByIndex } from "./CleanMessages"
@@ -45,8 +52,8 @@ import ImportMessages from './ImportMessages';
 import ExecuteCodeButton from "./ExecuteCode"
 import ContinueMessage from "./ContinueMessage";
 import { rebotoColor } from '@components/RobotIconColor';
-import ImageEncoder from '@components/ImageEncode';
 import ImportImage from './ImportImage';
+import Documents from './Documents';
 
 
 
@@ -72,7 +79,7 @@ function languageChoice(language) {
 
 const Chat = () => {
   const [messages, setMessages] = useRecoilState(chatMessagesState);
-  const authSettingsValue = useRecoilValue(authSettings)
+  const awsProviderSettingsValue = useRecoilValue(awsProviderSettings)
   const auth = useRecoilValue(authState)
   const [isClient, setIsClient] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
@@ -90,9 +97,11 @@ const Chat = () => {
   const isDark = colorMode === 'dark'
 
   const [image, setImage] = useState("");
+  const [encodedImage, setEncodedImage] = useState("");
+  const [mediaType, setMediaType] = useState("");
+  const [currentFile, setCurrentFile] = useState("");
 
   const [runResultValue, setRunResult] = useRecoilState(runResult);
-
 
 
 
@@ -153,8 +162,20 @@ const Chat = () => {
   const sendMessage = (message: string) => {
 
     const token = countTokens(message)
-    setMessages([...messages, { question: message, reply: "", costToken: token }])
+    setMessages([...messages, { question: message, reply: "", costToken: token, file: currentFile??"", image: image??"" }])
+
     onReply(message);
+    if (currentFile !== "") {
+      setCurrentFile("")
+    }
+
+    if (mediaType !== "") {
+      setMediaType("")
+    }
+
+    if (image !== "") {
+      setImage("")
+    }
   }
 
   const updateMessageList = (message: string,) => {
@@ -251,16 +272,29 @@ const Chat = () => {
       let isMindmap: boolean = false;
       const history = messages.slice(-5)
 
-
-      res = await fetchRequest("POST", `${baseURL}/api/bedrock/completion`, btoa(JSON.stringify(authSettingsValue)), {
-        query: value,
-        history: history,
-        role: authSettingsValue.aiRole,
-        roleType: authSettingsValue.roleType,
-        model: authSettingsValue.model,
-        image: image,
-
-      });
+      if (image!=""){
+        res = await fetchRequest("POST", `${baseURL}/api/bedrock/completion`, btoa(JSON.stringify(awsProviderSettingsValue)), {
+          query: value,
+          history: history,
+          role: awsProviderSettingsValue.aiRole,
+          roleType: awsProviderSettingsValue.roleType,
+          model: awsProviderSettingsValue.model,
+          image: image,
+          file: currentFile,
+  
+        });
+      }else{
+        res = await fetchRequest("POST", `${baseURL}/api/bedrock/completion`, btoa(JSON.stringify(awsProviderSettingsValue)), {
+          query: value,
+          history: history,
+          role: awsProviderSettingsValue.aiRole,
+          roleType: awsProviderSettingsValue.roleType,
+          model: awsProviderSettingsValue.model,
+          file: currentFile,
+  
+        });
+      }
+      
       if (res.status !== 200) {
         setAiThinking(false);
         updateMessageList("Please check your auth settings")
@@ -286,8 +320,7 @@ const Chat = () => {
           console.log(metaData, message.trim());
 
         } else {
-          console.log(chunkValue);
-          if (authSettingsValue.aiRole === "AUTOGEN") {
+          if (awsProviderSettingsValue.aiRole === "AUTOGEN") {
             if (chunkValue.indexOf("user_proxy") === -1 && chunkValue.trim().endsWith("TERMINATE") === false) {
               updateMessageList(chunkValue)
               updateMessageList("")
@@ -303,12 +336,26 @@ const Chat = () => {
       setAiThinking(false);
       console.log(error);
 
+    } finally {
+      if (image != "" || encodedImage != "" || mediaType != "") {
+        setImage("")
+        setEncodedImage("")
+        setMediaType("")
+      }
     }
   };
 
-
+  const encodedImageObject = image && mediaType ? {
+    type: "image",
+    source: {
+      type: "base64",
+      media_type: mediaType,
+      data: image,
+    },
+  } : null;
 
   return (
+
     <Flex direction="column" h="85vh" align="center" overflow={"hidden"}>
       {showAlert && <Box ml="10%" w="30%">
         <Stack spacing={3} >
@@ -319,109 +366,172 @@ const Chat = () => {
         </Stack>
       </Box>
       }
-      <Flex w="80%" h="75%" >
-        <Box flexGrow={2} p={4} overflowY="auto"
-          ref={messagesEnd}
-          css={{
-            '&::-webkit-scrollbar': {
-              width: '4px',
-            },
-            '&::-webkit-scrollbar-track': {
-              width: '6px',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              background: '#CBD5E0',
-              borderRadius: '24px',
-            },
-          }}
-        >
-          {isClient && messages.map((m, index) =>
-            <Box key={index} pt="50px">
 
-              <Flex alignContent={"right"} justifyContent={"right"}>
-                <Box p='2' bg={isDark ? "blue.300" : "gray.100"} rounded={"8px"}>
 
-                  <ReactMarkdown>{m.question}</ReactMarkdown>
-                </Box>
-                <Box p='2' >
-                  You
-                </Box>
+      <Flex w="100%" h="85%" >
 
-              </Flex>
-              <Box mt="20px"><CleanMessagesByIndex index={index} cleanMessageByIndxe={removeMessageByIndex} />
 
-                <Icon as={BsRobot} boxSize="24px" color={rebotoColor(isDark, authSettingsValue.roleType, authSettingsValue.aiRole)} />{aiThinking && <Spinner size='sm' />}
-                {/* {!aiThinking&&m.costToken&&<Button leftIcon={<BiDollarCircle />} variant='solid' size={"xs"}>Token Cost : {m.costToken}</Button>} */}
-              </Box>
-              <Box ml="30px"  >
-                <ReactMarkdown
-                  children={m.reply}
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    pre: Pre,
-                    code({ node, className, children, ...props }) {
-                      const match = /language-(\w+)/.exec(className || '')
-                      const [codeChildren, setCodeChildren] = useState(String(children).replace(/\n$/, ''))
-                      return match ? (
-                        <>
-                          {(supported(match[1])) && <CodeExecuteBtn language={languageChoice(match[1])} children={codeChildren} setChildren={setCodeChildren} />}
-                          <SyntaxHighlighter
-                            {...props}
-                            children={codeChildren}
-                            style={oneDark}
-                            language={match[1]}
-                            PreTag="div"
-                          />
-                        </>
+        <Flex ml="40px" direction="column" justify="center" align="left">
 
-                      ) : (
-                        <code {...props} className={className}>
-                          {children}
-                        </code>
-                      )
-                    }
-                  }}
-                />
-                {authSettingsValue.aiRole === "AWSCLICOACH" && !aiThinking && <>
-                  <ContinueMessage question={m.question} reply={m.reply} />
 
-                </>}
-              </Box>
-            </Box>
+          <Card
+            direction={{ base: 'column', sm: 'row' }}
+            overflow='hidden'
+            variant='outline'
+            size='md'
+            mr="10px"
+          >
+            <CardBody>
+              <Text>{'Workspace'}</Text>
+            </CardBody>
+          </Card>
 
-          )}
-        </Box>
-        <Flex ml="40px" direction="column" justify="center" align="center">
-          <IconButton
-            aria-label='goto top'
-            right={4}
-            icon={<BsArrowUpSquare />}
-            colorScheme="green"
-            onClick={(e) => { scrollToTop() }}
-          />
-          <Box h="1rem" />
-          <CleanMessages clearMessages={clearMessages} />
-          <Box h="1rem" />
-          <ExportMessages messages={messages} />
-          <Box h="1rem" />
-          <ImportMessages ></ImportMessages>
-          <Box h="1rem" />
-          <IconButton
-            right={4}
-            icon={<BsArrowDownSquare />}
-            aria-label="Toggle Theme"
-            colorScheme="green"
-            onClick={(e) => {
-              scrollToBottom()
+        </Flex>
+
+        <Flex w="75%" h="95%" >
+
+
+          <Box flexGrow={2} p={4} overflowY="auto"
+            ref={messagesEnd}
+            css={{
+              '&::-webkit-scrollbar': {
+                width: '4px',
+              },
+              '&::-webkit-scrollbar-track': {
+                width: '6px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: '#CBD5E0',
+                borderRadius: '24px',
+              },
             }}
-          />
+          >
+            {isClient && messages.map((m, index) =>
+              <Box key={index} pt="50px">
+
+                <Flex alignContent={"right"} justifyContent={"right"}>
+                  <Box p='2' bg={isDark ? "blue.300" : "gray.100"} rounded={"8px"}>
+
+                    <ReactMarkdown>{m.question}</ReactMarkdown>
+                    {m.file !== "" && <div><Icon as={MdAttachFile} /> {m.file}</div>}
+                    {/* {m.image && m.image != "" && m.image != "null" &&m.image != "undefined" && <div>
+                     <ChakraImage width={"15%"} height={"10%"} src={`data:${mediaType};base64,${JSON.parse(m.image??"").source?.data}`} alt="selected" />
+                    </div>} */}
+
+                  </Box>
+                  <Box p='2' >
+                    You
+                  </Box>
+
+                </Flex>
+                <Box mt="20px"><CleanMessagesByIndex index={index} cleanMessageByIndxe={removeMessageByIndex} />
+                  {/* <Tooltip label="robot-1" aria-label="Robot Icon"> */}
+                  <Icon as={BsRobot} boxSize="24px" color={rebotoColor(isDark, awsProviderSettingsValue.roleType, awsProviderSettingsValue.aiRole)} />{aiThinking && <Spinner size='sm' />}
+                  {/* </Tooltip> */}
+                  {/* {!aiThinking&&m.costToken&&<Button leftIcon={<BiDollarCircle />} variant='solid' size={"xs"}>Token Cost : {m.costToken}</Button>} */}
+                </Box>
+                <Box ml="30px"  >
+                  <ReactMarkdown
+                    children={m.reply}
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      pre: Pre,
+                      code({ node, className, children, ...props }) {
+                        const match = /language-(\w+)/.exec(className || '')
+                        const [codeChildren, setCodeChildren] = useState(String(children).replace(/\n$/, ''))
+                        return match ? (
+                          <>
+                            {(supported(match[1])) && <CodeExecuteBtn language={languageChoice(match[1])} children={codeChildren} setChildren={setCodeChildren} />}
+                            <SyntaxHighlighter
+                              {...props}
+                              children={codeChildren}
+                              style={oneDark}
+                              language={match[1]}
+                              PreTag="div"
+                            />
+                          </>
+
+                        ) : (
+                          <code {...props} className={className}>
+                            {children}
+                          </code>
+                        )
+                      }
+                    }}
+                  />
+                  {awsProviderSettingsValue.aiRole === "AWSCLICOACH" && !aiThinking && <>
+                    <ContinueMessage question={m.question} reply={m.reply} />
+
+                  </>}
+                </Box>
+              </Box>
+
+            )}
+          </Box>
+          <Flex ml="40px" direction="column" justify="center" align="center">
+            <IconButton
+              aria-label='goto top'
+              right={4}
+              icon={<BsArrowUpSquare />}
+              colorScheme="green"
+              onClick={(e) => { scrollToTop() }}
+            />
+            <Box h="1rem" />
+            <CleanMessages clearMessages={clearMessages} />
+            <Box h="1rem" />
+            <ExportMessages messages={messages} />
+            <Box h="1rem" />
+            <ImportMessages ></ImportMessages>
+            <Box h="1rem" />
+            <Documents updateCurrentFile={
+              (fileName) => {
+                console.log(`current file ${fileName}`)
+                setCurrentFile(fileName)
+              }
+            } />
+            <Box h="1rem" />
+            {isClient && awsProviderSettingsValue.model?.indexOf("claude-3") > -1 && (
+
+              <ImportImage onImageChangeHandler={(mediaType, selectedImage) => {
+                setImage(JSON.stringify(selectedImage))
+                if (selectedImage) {
+                  setEncodedImage(selectedImage.source.data)
+                  setMediaType(mediaType)
+                }
+
+
+              }} />
+
+            )}
+
+            <Box h="1rem" />
+
+            <IconButton
+              right={4}
+              icon={<BsArrowDownSquare />}
+              aria-label="Toggle Theme"
+              colorScheme="green"
+              onClick={(e) => {
+                scrollToBottom()
+              }}
+            />
+
+          </Flex>
         </Flex>
       </Flex>
 
+
+
       <Flex
         justifyContent={"center"}
-        p={8}
+        direction="column"
       >
+
+        {currentFile !== "" &&
+          <div>
+            <center><Icon as={MdAttachFile} /> {currentFile}</center>
+          </div>
+        }
         <Textarea
           ref={chatInput}
           placeholder={`Enter here ......`}
@@ -446,16 +556,7 @@ const Chat = () => {
 
       </Flex>
 
-      {authSettingsValue.model.indexOf("claude-3") > -1 && (
-        <Flex
-          justifyContent={"center"}
-          p={8}
-        >
-          <ImportImage onImageChangeHandler={(calude3Image) => {
-            setImage(JSON.stringify(calude3Image))
-          }} />
-        </Flex>
-      )}
+
     </Flex>
 
   )

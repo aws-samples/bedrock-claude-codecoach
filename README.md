@@ -78,8 +78,9 @@ Prompt Editor
 
   
 
-
 ## Deployment (Cloudformation)
+
+> Currently, we have only tested in the us-west-2 region. If you want to use another region, please fork this project, modify the region in the .env.local file, and also modify the init.sh file to clone the project from your repository for deployment. 
 
 
 1. Option1.  Create cloudformation statc use AWS CLI tools. 

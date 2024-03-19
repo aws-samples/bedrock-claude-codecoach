@@ -76,8 +76,9 @@ CodeCoach 演示视频链接:
 
   
 
-
 ## 部署 (Cloudformation)
+
+> 目前我们仅在us-west-2 区域做了测试，如果你要使用其它region,请fork这个项目，修改.env.local中的region,同时修改init.sh文件，从你的项目进行git clone 部署。 
 
 
 1. 选项1.  使用AWS CLI命令行工具进行部署. 

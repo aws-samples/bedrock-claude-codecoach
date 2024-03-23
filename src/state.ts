@@ -20,6 +20,12 @@ interface PromptTemplate {
 }
 
 
+interface Workspace {
+  name: string;
+  contentSummary: string;
+  messages: ChatMessage[];
+}
+
 const nameState =atom({
     key: 'nameState',
     default: '',
@@ -71,4 +77,12 @@ const promptTemplateState = atom<PromptTemplate[]>({
   });
 
 
-export {languageState,nameState, authState,runResult,awsProviderSettings,chatMessagesState,promptEditorResult, promptTemplateState}
+  
+  const workspacesState = atom<Workspace[]>({
+    key: 'workspacesState',
+    default: [{ name: 'Workspace 1',contentSummary:"", messages: [] }],
+    effects_UNSTABLE: [persistAtom],
+  });
+
+  
+export {languageState,nameState, authState,runResult,awsProviderSettings,workspacesState,chatMessagesState,promptEditorResult, promptTemplateState}

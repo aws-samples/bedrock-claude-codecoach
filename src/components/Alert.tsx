@@ -20,9 +20,9 @@ const Alert = ({ isOpen, onClose, title, childrenBody,childrenButton }: AlertPro
   const {t} = useTranslation();
 
   return (
-    <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose}>
+    <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose} >
       <AlertDialogOverlay>
-        <AlertDialogContent maxW="600px">
+        <AlertDialogContent maxW="700px">
           <AlertDialogHeader>{title}</AlertDialogHeader>
           <AlertDialogBody>{childrenBody}</AlertDialogBody>
           <AlertDialogFooter>

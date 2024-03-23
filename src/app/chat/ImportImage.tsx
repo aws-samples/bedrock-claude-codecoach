@@ -47,7 +47,7 @@ const ImportImage: React.FC<ImageEncoderProps> = ({ onImageChangeHandler }) => {
     setImage(null);
     setEncodedImage(null);
     setMediaType(null);
-    onImageChangeHandler("", "");
+    onImageChangeHandler("", null);
   };
 
   const encodedImageObject = encodedImage && mediaType ? {

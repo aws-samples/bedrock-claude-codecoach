@@ -39,6 +39,9 @@ Prompt Editor
 
 ![prompteditor](./images/prompteditor.png)
 
+Workspace:
+
+![prompteditor](./images/workspace.png)
 
 ## Features and Roadmap
 
@@ -47,6 +50,8 @@ Prompt Editor
 - [x] IAM Role support  
 
 - [x] Prompt Editor
+
+- [x] Workspace
 
 - [ ] Docker Image 
 

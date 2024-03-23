@@ -37,6 +37,11 @@ CodeCoach 演示视频链接:
 
 ![prompteditor](./images/prompteditor.zh.png)
 
+Workspace:
+
+![prompteditor](./images/workspace.png)
+
+
 
 ## Features and Roadmap
 
@@ -45,6 +50,8 @@ CodeCoach 演示视频链接:
 - [x] IAM Role support  
 
 - [x] Prompt Editor
+
+- [x] Workspace 
 
 - [ ] Docker Image 
 
@@ -127,6 +134,8 @@ CodeCoach 演示视频链接:
    ![web](./images/web.png)
 
    ![password](./images/password.zh.png)
+
+
 
 ## Tips
 

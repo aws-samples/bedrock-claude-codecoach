@@ -208,6 +208,7 @@ const Setting = (props) => {
                                     <option value="anthropic.claude-instant-v1">Claude Instant</option> 
                                     <option value="anthropic.claude-v2">Claude2</option>    
                                     <option value="anthropic.claude-v2:1">Claude2.1</option>
+                                    <option value="anthropic.claude-3-opus-20240229-v1:0">Claude3 Opus</option>
                                     <option value="anthropic.claude-3-sonnet-20240229-v1:0">Claude3 Sonnet</option>
                                     <option value="anthropic.claude-3-haiku-20240307-v1:0">Claude3 Haiku</option>
                                     <option value="mistral.mistral-7b-instruct-v0:2">Mistral 7B</option>

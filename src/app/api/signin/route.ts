@@ -1,63 +1,32 @@
-
-import sha256 from "crypto-js/sha256";
-import expiredAt from "@utils/expirydate";
-
+import { readJson, RequestError } from "@utils/request";
 import { NextRequest, NextResponse } from "next/server";
+import { QuerySignUsers, UpdateUser } from "@utils/ddb";
+import { createSession, isSameOrigin } from "@utils/auth";
+import { verifyPassword } from "@utils/password";
 
-import { QuerySignUsers } from "@utils/ddb";
-
-
-interface User {
-  email: string;
-  password: string;
-}
-
-
-
-/**
- * POST handler for API route
- * 
- * @param {NextRequest} req - The request object
- */
-export async function POST(req: NextRequest) {
-  const unAuthRes = NextResponse.json(
-    { error: "Bad Request" },
-    { status: 401 }
-  );
-
+export async function POST(request: NextRequest) {
+  if (!isSameOrigin(request)) {
+    return NextResponse.json({ error: "Invalid request origin" }, { status: 403 });
+  }
   try {
-    const user: User = await req.json();
-   
-    const existUsers = await QuerySignUsers(user.email);
-
-    const hashDigest = sha256(user.password);
-    
-
-    if (existUsers.length > 0) {
-      const existUser = existUsers[0];
-      console.log(
-        `Exist User : ${existUser.PK.S}, ${existUser.password.S}, ${existUser.role.S}, `
-      );
-
-      if (existUser.password.S == hashDigest) {
-        const res = NextResponse.json({
-          user: user.email,
-          role: existUser.role.S,
-          expiredAt: expiredAt(1),
-        });
-
-        res.cookies.set(
-          "auth",
-          JSON.stringify({ user: user.email, expiredAt: expiredAt(1) })
-        );
-
-        return res;
-      }
+    const { email, password } = await readJson(request, 128 * 1024);
+    if (typeof email !== "string" || !email || email.length > 254 ||
+        typeof password !== "string" || !password || password.length > 1024 ||
+        (email === "admin@demo.com" && password === "123456!@#")) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
-
-    return unAuthRes;
+    const [account] = await QuerySignUsers(email);
+    if (!account || !await verifyPassword(password, account.password?.S)) {
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+    }
+    let version = account.authVersion?.S ?? "0";
+    if (!account.password.S.startsWith("scrypt$")) {
+      version = await UpdateUser(email, password, account.password.S);
+    }
+    return await createSession(email, version, account.role?.S ?? "guest");
   } catch (error) {
-    console.error(error);
-    return unAuthRes;
+    if (error instanceof RequestError) return NextResponse.json({ error: error.message }, { status: error.status });
+    console.error("Sign-in failed", error instanceof Error ? error.name : "Error");
+    return NextResponse.json({ error: "Sign-in unavailable" }, { status: 503 });
   }
 }

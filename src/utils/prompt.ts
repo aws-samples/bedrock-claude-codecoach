@@ -1,5 +1,4 @@
 import { PromptTemplate } from "@langchain/core/prompts";
-import fetchRequest from "./fetch";
 import {  QueryPromptByPK } from "./ddb";
 
 
@@ -68,7 +67,7 @@ Here is my question:
 )
 
 
-export const GetPrompByRole=async (role:string,roleType:string)=> {
+export const GetPrompByRole=async (role:string,roleType:string,owner:string)=> {
   
   if(roleType==="system"){
     if (role === "CODECOACH") {
@@ -80,7 +79,7 @@ export const GetPrompByRole=async (role:string,roleType:string)=> {
     return NormalPrompt
   }
 
-  const prompt= await QueryPromptByPK(role)
+  const prompt= await QueryPromptByPK(role, owner)
 
   if (prompt.length === 0) {
     return NormalPrompt
@@ -92,24 +91,6 @@ export const GetPrompByRole=async (role:string,roleType:string)=> {
   
 }
 
-const LoadPrompt = async (authSettingsValue) => {
-  try {
-      const res: Response = await fetchRequest("GET", `/api/prompt`, btoa(JSON.stringify(authSettingsValue)), {
-
-      });
-      if (res.status !== 200) {
-          console.log("error", res.status)
-          return
-      }
-      return res.json()
-
-  } catch (error) {
-      console.log(error);
-      return []
-  }
-
-}
-
-export {NormalPrompt,SummarizePrompt,MindmapPrompt,LoadPrompt}
+export {NormalPrompt,SummarizePrompt,MindmapPrompt}
 
 export {type CustomPromptTemplate }

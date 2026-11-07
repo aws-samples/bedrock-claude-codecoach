@@ -1,6 +1,6 @@
 
-import sha256 from "crypto-js/sha256";
-import { DynamoDBClient, QueryCommand, PutItemCommand,UpdateItemCommand, DeleteItemCommand, AttributeValue } from "@aws-sdk/client-dynamodb";
+import { hashPassword } from "./password";
+import { DynamoDBClient, GetItemCommand, QueryCommand, PutItemCommand,UpdateItemCommand, DeleteItemCommand, AttributeValue } from "@aws-sdk/client-dynamodb";
 
 import crypto from 'crypto'; 
 import { AWSConfig } from "./aws";
@@ -24,18 +24,19 @@ const client = new DynamoDBClient(AWSConfig())
  * @returns {Object[]} Array of matched user objects
  */
 const QuerySignUsers = async (email: string) => {
-    console.log("QuerySignUsers invoke")
     const params = {
       TableName: dynamodbTableName,
-      KeyConditionExpression: "PK = :value",
+      KeyConditionExpression: "PK = :value AND SK = :account",
+      ConsistentRead: true,
       ExpressionAttributeValues: {
         ":value": { S: email },
+        ":account": { S: "#ACC" },
       },
     };
   
     const command = new QueryCommand(params);
     const results = await client.send(command);
-    return results.Items;
+    return results.Items ?? [];
   }
 
 
@@ -68,7 +69,7 @@ const GeneratePrompt = (email: string, name:string, prompt:string) => {
  */
 const CreatePrompt =async (email: string, name:string, prompt :string) => {
     const item = GeneratePrompt(email, name,prompt);
-    PutItem(dynamodbTableName, item);
+    await PutItem(dynamodbTableName, item);
     return dynamoDBToJSON(item);
 }
 
@@ -96,18 +97,9 @@ const DeletePrompt = async (owner:string, promptID:string) =>{
  * @param {string} tableName - Name of DynamoDB table
  * @param {Object} item - Item to add 
  */
-const PutItem = async (tableName:string,item: Record<string, AttributeValue>) => {
-    try {
-        const putCommand = new PutItemCommand({
-            TableName: tableName,
-            Item: item
-        });
-        const data = await client.send(putCommand);
-        console.log("Success - item added:", data);
-    } catch (error) {
-        console.error("Error - item not added:", error);
-    }
-}
+const PutItem = async (tableName: string, item: Record<string, AttributeValue>) => {
+    return client.send(new PutItemCommand({ TableName: tableName, Item: item }));
+};
 
 /**
  * Queries prompts for a user email address.
@@ -134,44 +126,60 @@ const QueryPrompt = async (email: string) => {
  * @param {string} pk - Partition key value to query 
  * @returns {Object[]} Array of matched prompt objects
  */ 
-const QueryPromptByPK = async (pk: string) => {
+const QueryPromptByPK = async (pk: string, owner: string) => {
     const command = new QueryCommand({
         TableName: dynamodbTableName,
-        KeyConditionExpression: "PK = :pk",
+        KeyConditionExpression: "PK = :pk AND SK = :owner",
         ExpressionAttributeValues: {
-            ":pk": { "S": pk }
+            ":pk": { "S": pk },
+            ":owner": { "S": owner }
         }
     });
     const response = await client.send(command);
     return response.Items.map(dynamoDBToJSON);
 }
 
-const UpdateUser = async (email: string, password: string) => {
-    const hashedPassword = sha256(password).toString()
-    const updateCommand = new UpdateItemCommand({
+const UpdateUser = async (email: string, password: string, previousHash: string) => {
+    const hashedPassword = await hashPassword(password);
+    const version = crypto.randomBytes(16).toString("hex");
+    await client.send(new UpdateItemCommand({
         TableName: dynamodbTableName,
-        Key: {
-            PK: { S: email },
-            SK: { S: "#ACC"}
-        },
-        UpdateExpression: "set #password = :password",
-        ExpressionAttributeNames: {
-            "#password": "password"
-        },
+        Key: { PK: { S: email }, SK: { S: "#ACC" } },
+        UpdateExpression: "SET #password = :password, authVersion = :version",
+        ConditionExpression: "#password = :previous",
+        ExpressionAttributeNames: { "#password": "password" },
         ExpressionAttributeValues: {
-            ":password": { S:  hashedPassword}
-        }
-    });
+            ":password": { S: hashedPassword },
+            ":version": { S: version },
+            ":previous": { S: previousHash },
+        },
+    }));
+    return version;
+};
 
-    try {
-        await client.send(updateCommand);
-        console.log(`Success - ${password} item updated`);
-    } catch (error) {
-        console.error("Error - failed to update item:", error);
-    }
-}
+export const SaveSession = (id: string, user: string, expiresAt: number) =>
+    client.send(new PutItemCommand({
+        TableName: dynamodbTableName,
+        Item: {
+            PK: { S: `#SESSION#${id}` }, SK: { S: "#SESSION" },
+            user: { S: user }, expiresAt: { N: String(expiresAt) },
+        },
+        ConditionExpression: "attribute_not_exists(PK)",
+    }));
 
+export const ReadSession = async (id: string) => {
+    const response = await client.send(new GetItemCommand({
+        TableName: dynamodbTableName,
+        Key: { PK: { S: `#SESSION#${id}` }, SK: { S: "#SESSION" } },
+        ConsistentRead: true,
+    }));
+    return response.Item;
+};
 
+export const DeleteSession = (id: string) => client.send(new DeleteItemCommand({
+    TableName: dynamodbTableName,
+    Key: { PK: { S: `#SESSION#${id}` }, SK: { S: "#SESSION" } },
+}));
 
 function dynamoDBToJSON(data) {
     const converted = {};

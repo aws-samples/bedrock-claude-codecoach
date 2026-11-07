@@ -1,54 +1,21 @@
-import { QuerySignUsers, UpdateUser } from '@utils/ddb';
-import { NextRequest,NextResponse} from 'next/server'
-import sha256 from "crypto-js/sha256";
+import { readJson, RequestError } from "@utils/request";
+import { NextResponse } from "next/server";
+import { QuerySignUsers, UpdateUser } from "@utils/ddb";
+import { withAuth, createSession, revokeSession } from "@utils/auth";
+import { verifyPassword } from "@utils/password";
 
-
-/**
- * GET handler for API route
- *
- * @param {NextRequest} req - The request object
- */
-export async function GET(req: NextRequest) {
-    return NextResponse.json({"status":"ok"})
-}
-
-
-
-/**
- * POST handler for API route
- *
- * @param {NextRequest} req - The request object
- */
-export async function POST(req: NextRequest) {
-
-    try {
-        const { oldPassword,newPassword } = await req.json();
-        const currentUser = req.cookies.get("auth")?.value
-        const email = JSON.parse(currentUser).user
-        if (!oldPassword||!newPassword||!currentUser) {
-          return new Response("BAD Request", { status: 403 });
-        }
-        const existUsers = await QuerySignUsers(email);
-
-        const hashDigest = sha256(oldPassword);
-
-        if (existUsers.length > 0) {
-            const existUser = existUsers[0];
-            
-            if (existUser.password.S == hashDigest) {
-                await UpdateUser(email,newPassword)
-                return NextResponse.json({ "status": `passwordupdate successfully` });
-                
-            }else{
-                return new Response("Old password wrong", { status: 403 }); 
-            }   
-          }
-
-        return NextResponse.json({ "status": `${email}, update successfully` });
-    
-      } catch (e) { 
-        return new Response("BAD Request", { status: 403 }); 
-      }
-
-    
-}
+export const POST = withAuth(async (request, user) => {
+  const { oldPassword, newPassword } = await readJson(request, 128 * 1024);
+  if (typeof oldPassword !== "string" || typeof newPassword !== "string" ||
+      newPassword.length < 12 || newPassword.length > 1024 || oldPassword === newPassword) {
+    return NextResponse.json({ error: "Use a different password of 12–1024 characters" }, { status: 400 });
+  }
+  const [account] = await QuerySignUsers(user.user);
+  if (!account || !await verifyPassword(oldPassword, account.password?.S)) {
+    return NextResponse.json({ error: "Old password is incorrect" }, { status: 403 });
+  }
+  const version = await UpdateUser(user.user, newPassword, account.password.S);
+  await revokeSession(user.id);
+  // Changing the account version invalidates every previous session.
+  return createSession(user.user, version, user.role);
+});

@@ -1,4 +1,4 @@
-import { useState,useRef } from "react";
+import { useState,useRef,useEffect } from "react";
 import { IconButton,Box,Button, AlertDialog, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, Spinner } from "@chakra-ui/react";
 import CodeMirror from '@uiw/react-codemirror';
 
@@ -32,6 +32,12 @@ const ExecuteCodeButton = ({language,code,setCode}:ExcuteCodeProps) => {
   const [currentCode, setCurrentCode] = useState(code);
   const [output, setOutput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [canExecute, setCanExecute] = useState(false);
+  useEffect(() => {
+    fetch("/api/execute").then((response) => response.json()).then((capabilities) => {
+      setCanExecute(capabilities.enabled && capabilities.languages?.includes(language));
+    }).catch(() => setCanExecute(false));
+  }, [language]);
 
   const {t} = useTranslation();
 
@@ -63,7 +69,7 @@ const ExecuteCodeButton = ({language,code,setCode}:ExcuteCodeProps) => {
         setOutput(`stdout: ${run.stdout} \nstderr: ${run.stderr} \n`);
       }
     } catch (error) {
-      // Handle any errors here
+      setOutput("Code execution could not be completed.");
     } finally {
       setLoading(false);
     }
@@ -83,7 +89,7 @@ const ExecuteCodeButton = ({language,code,setCode}:ExcuteCodeProps) => {
           <AlertDialogContent maxW="700px" >
             <AlertDialogHeader>Code Execute </AlertDialogHeader>
             <AlertDialogBody>
-              Are you sure you want to execute this [{language}]code  ?
+              {canExecute ? `Run this ${language} code without network access?` : "Code execution is unavailable. You can still edit and save this code."}
               <CodeMirror
                         value={code}
                         onChange={(newValue) => setCurrentCode(newValue)}
@@ -128,7 +134,7 @@ const ExecuteCodeButton = ({language,code,setCode}:ExcuteCodeProps) => {
               </Button>
               }
               
-              <Button isLoading={loading} colorScheme="orange" onClick={onExecute} ml={3}>
+              <Button isDisabled={!canExecute} isLoading={loading} colorScheme="orange" onClick={onExecute} ml={3}>
               {t('Execute')}
               </Button>
             </AlertDialogFooter>

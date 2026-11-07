@@ -53,7 +53,7 @@ const generatePayload = (model: string, role:string, prompt: string,image:string
 
     const flattenedHistory = messages.flatMap(item => item);
 
-    console.log(messages, flattenedHistory)
+
 
     let messagesArray =[] 
      
@@ -127,7 +127,7 @@ const getCompletion = async (model: string, role: string, query: string,image:st
 
     if (file&&file!=null){
        contents = await ContentLoader(file)
-       console.log("contents" , contents)
+
     }
 
 
@@ -135,7 +135,7 @@ const getCompletion = async (model: string, role: string, query: string,image:st
     const payload = generatePayload(model,role, prompt,image,history,contents);
 
     // Log for debugging
-    console.log(role, model, payload);
+
 
 
     // Call model
@@ -178,7 +178,7 @@ const getCompletion = async (model: string, role: string, query: string,image:st
       await writer.write(`\n\n &nbsp;`);
 
       // Close writer
-      writer.close();
+
 
     } else {
       // Handle errors
@@ -190,7 +190,8 @@ const getCompletion = async (model: string, role: string, query: string,image:st
   } catch (error) {
     console.error('Error retrieving caller identity or invoke model :', error);
     await writer.write(`ERROR: retrieving caller identity auth faild or invoke ${model} failed ! `)
-    return
+  } finally {
+    await writer.close().catch(() => {});
   }
 };
 

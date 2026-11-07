@@ -83,59 +83,39 @@ Workspace:
 
   
 
-## 部署 (Cloudformation)
+## 部署 (CloudFormation)
 
-> 目前我们仅在us-west-2 区域做了测试，如果你要使用其它region,请fork这个项目，修改.env.local中的region,同时修改init.sh文件，从你的项目进行git clone 部署。 
+部署或升级前请阅读 [安全与迁移说明](SECURITY.md)。应用使用签名 Cookie 和
+DynamoDB 会话记录进行认证。代码执行默认关闭；启用后会创建独立的离线执行实例，
+该实例不附加 IAM 角色，并关闭 IMDS。
 
+模板支持 `us-west-2`、`us-east-1` 的默认 VPC。部署时必须指定管理员 SSH 来源 CIDR
+及该区域的 CloudFront origin-facing 托管前缀列表 ID：
 
-1. 选项1.  使用AWS CLI命令行工具进行部署. 
+```sh
+aws cloudformation create-stack --stack-name codecoach \
+  --template-body file://cf-template.yaml \
+  --parameters \
+    ParameterKey=SSHKeyName,ParameterValue=<your_ec2_keypair> \
+    ParameterKey=SSHLocation,ParameterValue=<your_admin_ip/32> \
+    ParameterKey=CloudFrontPrefixListId,ParameterValue=<regional_prefix_list_id> \
+    ParameterKey=AdminEmail,ParameterValue=<your_email> \
+    ParameterKey=SourceRevision,ParameterValue=<reviewed_commit> \
+  --capabilities CAPABILITY_IAM
+```
 
-   ```bash
-   #Replace <your_ec2_keypair> to your EC2 key pair.
-   #Create Stack
-   aws cloudformation create-stack --stack-name codecoach --template-body file://cf-template.yaml --parameters ParameterKey=SSHKeyName,ParameterValue=<your_ec2_keypair> --capabilities CAPABILITY_IAM
-   
-   #Check StackStatus , CREATE_COMPLETE
-   aws cloudformation describe-stacks --stack-name codecoach --query "Stacks[0].StackStatus" --output text
-   
-   #Get CDN https url 
-   aws cloudformation describe-stacks --stack-name codecoach --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDomainName'].OutputValue" --output text
-   
-   
-   
-   
-   ```
+安装程序为管理员生成唯一密码，保存在应用实例的 `/root/codecoach-credentials`，
+仅 root 可读。通过受信任的 SSH 连接获取密码后，使用 HTTPS CloudFront 地址登录。
+不再提供公共默认密码。
 
+升级现有部署时，通过 `ExistingTableName` 复用原表，并遵循
+[迁移步骤](SECURITY.md#existing-deployment-migration-and-customer-impact)。
+旧 Cookie 将失效，用户需要重新登录；仍使用旧公开密码的演示账户需要管理员重置。
+删除旧容器前必须备份其中的上传文件。仅更新仓库或 UserData 不会自动修复已运行的部署。
 
-
-2. 选项2.  使用Web控制台进行部署
-
-   步骤1.  进入Cloudformation界面，点击创建Stack 并且上传cf-template.yaml文件
-
-   ![cf-step1](./images/cf-step1.png)
-
-   ![cf-step2](./images/cf-step2.png)
-
-   步骤2. 设置EC2密钥对名字,点击下一步，确认后提交
-
-   ![cf-step3](./images/cf-step3.png)
-
-   ![cf-step4](./images/cf-step4.png)
-
-   步骤3. Cloudformation Stack创建完成后查看 cloudfront 访问地址
-   
-   ![cf-step5](./images/cf-step5.png)
-   
-3. 登录CodeCoach, 默认用户名密码: admin@demo.com/123456!@#,**首次登录后切记修改密码!**
-
-   ```
-   https://<CDN_URL>
-   ```
-   ![web](./images/web.png)
-
-   ![password](./images/password.zh.png)
-
-
+`EnableCodeExecution=true` 会增加独立 EC2 实例和存储费用。仅管理员可执行离线代码，
+任务不能访问网络；AWS CLI 命令需自行审查并在自己的环境运行。
+上线前须完成客户影响评审，并取得 leadership 和 AppSec Affinity Engineer 审批。
 
 ## Tips
 

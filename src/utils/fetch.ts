@@ -54,14 +54,12 @@ const fetchRequest = async (method: "GET"|"POST"|"DELETE",url: string, accessTok
 export  async function fetchRequestCode(method: "GET"|"POST",url: string,  params: { [key: string]: any}  ) {
 
 
-  const access_token= "SK-123456789012"
 
   if (method==="POST"){
     const res = await fetch(url, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${access_token}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(params)
     });
@@ -81,3 +79,24 @@ export  async function fetchRequestCode(method: "GET"|"POST",url: string,  param
 
 
 export default fetchRequest;
+
+export const LoadPrompt = async (authSettingsValue) => {
+  try {
+      const res: Response = await fetchRequest("GET", `/api/prompt`, btoa(JSON.stringify(authSettingsValue)), {
+
+      });
+      if (res.status !== 200) {
+          console.log("error", res.status)
+          return
+      }
+      return res.json()
+
+  } catch (error) {
+      console.log(error);
+      return []
+  }
+
+}
+
+
+export interface CustomPromptTemplate { PK?: string; name: string; prompt: string; }

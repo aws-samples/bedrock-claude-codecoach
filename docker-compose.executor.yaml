@@ -1,0 +1,25 @@
+# Run ONLY on a dedicated worker with no AWS role, credentials or application
+# secrets. Piston requires privileges; it must never share the application host.
+services:
+  api:
+    image: ghcr.io/engineer-man/piston@sha256:2f66b7456189c4d713aa986d98eccd0b6ee16d26c7ec5f21b30e942756fd127a
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "${EXECUTOR_BIND_ADDRESS:-127.0.0.1}:2000:2000"
+    volumes:
+      - ./data/piston/packages:/piston/packages
+    environment:
+      PISTON_DISABLE_NETWORKING: "true"
+      PISTON_RUN_TIMEOUT: "10000"
+      PISTON_COMPILE_TIMEOUT: "10000"
+      PISTON_RUN_CPU_TIME: "5000"
+      PISTON_COMPILE_CPU_TIME: "10000"
+      PISTON_RUN_MEMORY_LIMIT: "268435456"
+      PISTON_COMPILE_MEMORY_LIMIT: "268435456"
+      PISTON_MAX_CONCURRENT_JOBS: "2"
+      PISTON_OUTPUT_MAX_SIZE: "65536"
+      PISTON_MAX_FILE_SIZE: "1000000"
+    tmpfs:
+      - /piston/jobs:exec,uid=1000,gid=1000,mode=711
+      - /tmp:exec

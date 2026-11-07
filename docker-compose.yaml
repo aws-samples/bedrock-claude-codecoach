@@ -1,31 +1,14 @@
-version: '3.2'
-
 services:
-    api:
-        image: ghcr.io/engineer-man/piston
-        container_name: piston_api
-        restart: always
-        ports:
-            - 2000:2000
-        volumes:
-            - ./data/piston/packages:/piston/packages
-        environment:
-            - PISTON_REPO_URL=https://github.com/yanjun-ios/piston/releases/download/Packages/index
-            - PISTON_DISABLE_NETWORKING=false
-            - PISTON_RUN_TIMEOUT=300000
-            - PISTON_COMPILE_TIMEOUT=300000
-            - PISTON_OUTPUT_MAX_SIZE=10240000
-            - PISTON_MAX_FILE_SIZE=50000000
-        tmpfs:
-            - /piston/jobs:exec,uid=1000,gid=1000,mode=711
-            - /tmp:exec
-    codecoach:
-        image: codecoach
-        container_name: codecoach
-        restart: always
-        ports:
-            - 3000:3000
-        environment:
-            - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-            - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-
+  codecoach:
+    build: .
+    image: codecoach
+    restart: unless-stopped
+    ports:
+      - "${APP_BIND_ADDRESS:-127.0.0.1}:3000:3000"
+    env_file: .env.local
+    environment:
+      NODE_ENV: production
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - ./data/uploads:/app/uploads

@@ -18,7 +18,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 
 
 import { promptEditorResult, awsProviderSettings, authState } from "../../state";
-import { CustomPromptTemplate, LoadPrompt } from '@utils/prompt';
+import { CustomPromptTemplate, LoadPrompt } from '@utils/fetch';
 import fetchRequest from '@utils/fetch';
 import { useTranslation } from 'react-i18next';
 import ImageEncoder from '@components/ImageEncode';

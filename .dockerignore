@@ -1,1 +1,7 @@
-data/
+.git
+node_modules
+.next
+data
+.env*
+*.log
+coverage

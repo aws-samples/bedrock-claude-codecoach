@@ -83,57 +83,41 @@ Workspace:
 
   
 
-## Deployment (Cloudformation)
+## Deployment (CloudFormation)
 
-> Currently, we have only tested in the us-west-2 region. If you want to use another region, please fork this project, modify the region in the .env.local file, and also modify the init.sh file to clone the project from your repository for deployment. 
+Read [Security and migration](SECURITY.md) before deploying or upgrading. The
+application uses signed, server-backed sessions. Code execution is disabled by
+default; enabling it provisions a separate offline worker without AWS credentials.
 
+The template supports a default VPC in `us-west-2` or `us-east-1`. Supply a trusted
+SSH CIDR and the regional CloudFront origin-facing managed prefix list ID:
 
-1. Option1.  Create cloudformation statc use AWS CLI tools. 
+```sh
+aws cloudformation create-stack --stack-name codecoach \
+  --template-body file://cf-template.yaml \
+  --parameters \
+    ParameterKey=SSHKeyName,ParameterValue=<your_ec2_keypair> \
+    ParameterKey=SSHLocation,ParameterValue=<your_admin_ip/32> \
+    ParameterKey=CloudFrontPrefixListId,ParameterValue=<regional_prefix_list_id> \
+    ParameterKey=AdminEmail,ParameterValue=<your_email> \
+    ParameterKey=SourceRevision,ParameterValue=<reviewed_commit> \
+  --capabilities CAPABILITY_IAM
+```
 
-   ```bash
-   #Replace <your_ec2_keypair> to your EC2 key pair.
-   #Create Stack
-   aws cloudformation create-stack --stack-name codecoach --template-body file://cf-template.yaml --parameters ParameterKey=SSHKeyName,ParameterValue=<your_ec2_keypair> --capabilities CAPABILITY_IAM
-   
-   #Check StackStatus , CREATE_COMPLETE
-   aws cloudformation describe-stacks --stack-name codecoach --query "Stacks[0].StackStatus" --output text
-   
-   #Get CDN https url 
-   aws cloudformation describe-stacks --stack-name codecoach --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDomainName'].OutputValue" --output text
-   
-   
-   
-   
-   ```
+The installer generates a unique password, stored in
+`/root/codecoach-credentials` on the application instance. Retrieve it over your
+trusted SSH connection and sign in using the HTTPS CloudFront URL. There is no
+shared default password.
 
+For an existing installation, preserve its table with `ExistingTableName` and
+follow the [migration steps](SECURITY.md#existing-deployment-migration-and-customer-impact).
+Old cookies expire on migration; the public demo account requires an operator
+password reset. Uploads must be copied out of the old container before removal.
 
-
-2. Option2.  Create cloudformation through web console
-
-   Step1.   click create stack and upload cf-template.yaml
-
-   ![cf-step1](./images/cf-step1.png)
-
-   ![cf-step2](./images/cf-step2.png)
-
-   Step2. Setup parameter and Submit
-
-   ![cf-step3](./images/cf-step3.png)
-
-   ![cf-step4](./images/cf-step4.png)
-
-   Step3. Found cloudfront URL
-   
-   ![cf-step5](./images/cf-step5.png)
-   
-3. Access CodeCoach, default user admin@demo.com/123456!@#,**please change your password when you first login!**
-
-   ```
-   https://<CDN_URL>
-   ```
-   ![web](./images/web.png)
-
-   ![password](./images/password.png)
+Set `EnableCodeExecution=true` only after reviewing the additional worker cost
+and isolation requirements. Execution is administrator-only and has no network
+access; AWS CLI commands must be reviewed and run in your own environment.
+Production rollout requires customer impact review and leadership/AppSec approval.
 
 ## Tips
 

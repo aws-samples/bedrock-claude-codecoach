@@ -1,10 +1,38 @@
-AWSTemplateFormatVersion: 2010-09-09
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CodeCoach with authenticated APIs and optional isolated offline execution
 
 Parameters:
   SSHKeyName:
-    Description: Name of existing EC2 SSH key pair
     Type: AWS::EC2::KeyPair::KeyName
-    ConstraintDescription: Must be an existing EC2 key pair name
+    Description: Existing EC2 SSH key pair
+  SSHLocation:
+    Type: String
+    Description: Trusted administrator IPv4 CIDR; public SSH access is prohibited
+    AllowedPattern: '(?!0\.0\.0\.0/0$)(?:[0-9]{1,3}\.){3}[0-9]{1,3}/(?:[1-9]|[12][0-9]|3[0-2])'
+  CloudFrontPrefixListId:
+    Type: String
+    Description: Regional com.amazonaws.global.cloudfront.origin-facing managed prefix list ID
+    AllowedPattern: 'pl-[a-f0-9]+'
+  ExistingTableName:
+    Type: String
+    Default: ''
+    Description: Existing CodeCoach table to preserve, or empty to create a stack-owned table
+    AllowedPattern: '^$|[A-Za-z0-9_.-]{3,255}'
+  AdminEmail:
+    Type: String
+    Default: admin@example.com
+    AllowedPattern: '[A-Za-z0-9._+-]+@[A-Za-z0-9.-]+'
+    Description: Initial administrator; a unique password is generated on the application instance
+  EnableCodeExecution:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: Provision a separate, credential-free worker; incurs an additional EC2 charge
+  SourceRevision:
+    Type: String
+    Default: main
+    AllowedPattern: '[A-Za-z0-9._/-]+'
+    Description: Reviewed repository revision; use an immutable commit for production
 
 Mappings:
   RegionMap:
@@ -13,78 +41,176 @@ Mappings:
     us-west-2:
       AMI: ami-00448a337adc93c05
 
+Conditions:
+  CreateTable: !Equals [!Ref ExistingTableName, '']
+  EnableExecutor: !Equals [!Ref EnableCodeExecution, 'true']
+
 Resources:
+  ApplicationTable:
+    Type: AWS::DynamoDB::Table
+    Condition: CreateTable
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: SK-index
+          KeySchema:
+            - AttributeName: SK
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
 
   EC2Role:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: 2012-10-17
+        Version: '2012-10-17'
         Statement:
           - Effect: Allow
             Principal:
-              Service:
-                - ec2.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      Path: /
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/ReadOnlyAccess
-        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
-        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
-        - arn:aws:iam::aws:policy/AmazonBedrockFullAccess
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
       Policies:
-        - PolicyName: EC2ModifyInstanceMetadataOptions
+        - PolicyName: ApplicationData
           PolicyDocument:
-            Version: 2012-10-17
+            Version: '2012-10-17'
             Statement:
               - Effect: Allow
                 Action:
-                  - ec2:ModifyInstanceMetadataOptions
-                Resource: "*"
+                  - dynamodb:GetItem
+                  - dynamodb:Query
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                Resource:
+                  - !If [CreateTable, !GetAtt ApplicationTable.Arn, !Sub 'arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ExistingTableName}']
+                  - !If [CreateTable, !Sub '${ApplicationTable.Arn}/index/SK-index', !Sub 'arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ExistingTableName}/index/SK-index']
+              - Effect: Allow
+                Action: bedrock:InvokeModelWithResponseStream
+                Resource:
+                  - !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/anthropic.claude-instant-v1'
+                  - !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/anthropic.claude-v2'
+                  - !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/anthropic.claude-v2:1'
+                  - !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/anthropic.claude-3-opus-20240229-v1:0'
+                  - !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0'
+                  - !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/anthropic.claude-3-haiku-20240307-v1:0'
+                  - !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/mistral.mistral-7b-instruct-v0:2'
+                  - !Sub 'arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/mistral.mixtral-8x7b-instruct-v0:1'
 
   EC2InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
-      Path: /
-      Roles:
-        - !Ref EC2Role
+      Roles: [!Ref EC2Role]
 
   MyEC2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMI]
+      ImageId: !FindInMap [RegionMap, !Ref 'AWS::Region', AMI]
       InstanceType: c6i.large
       IamInstanceProfile: !Ref EC2InstanceProfile
       KeyName: !Ref SSHKeyName
+      MetadataOptions:
+        HttpTokens: required
+        # Only the trusted application runs here; the executor is a separate VM.
+        HttpPutResponseHopLimit: 2
+        HttpEndpoint: enabled
       BlockDeviceMappings:
         - DeviceName: /dev/xvda
           Ebs:
             VolumeSize: 50
+            Encrypted: true
+      SecurityGroupIds: [!GetAtt InstanceSG.GroupId]
       UserData:
-        Fn::Base64: |
-          #!/bin/bash
-          cd /root/ && sh -c "$(curl -fsSL https://raw.githubusercontent.com/aws-samples/bedrock-claude-codecoach/main/init.sh)"
-      SecurityGroupIds:
-        - !Ref InstanceSG
+        Fn::Base64:
+          Fn::Sub:
+            - |
+              #!/bin/bash
+              set -euo pipefail
+              yum install -y git
+              git clone https://github.com/aws-samples/bedrock-claude-codecoach /opt/codecoach
+              cd /opt/codecoach
+              git checkout '${SourceRevision}'
+              export AWS_REGION='${AWS::Region}' DDB_TABLE='${TableName}' ADMIN_EMAIL='${AdminEmail}'
+              export APP_BIND_ADDRESS=0.0.0.0 ENABLE_CODE_EXECUTION='${EnableCodeExecution}' PISTON_SERVER_URL='${ExecutorURL}'
+              bash init.sh
+            - TableName: !If [CreateTable, !Ref ApplicationTable, !Ref ExistingTableName]
+              ExecutorURL: !If [EnableExecutor, !Sub 'http://${ExecutorInstance.PrivateIp}:2000', '']
 
   InstanceSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow SSH, HTTP and HTTPS access
+      GroupDescription: Application access from CloudFront and trusted administrators
       SecurityGroupIngress:
-        - CidrIp: 0.0.0.0/0
+        - CidrIp: !Ref SSHLocation
           FromPort: 22
           ToPort: 22
           IpProtocol: tcp
-        - CidrIp: 0.0.0.0/0
+        - SourcePrefixListId: !Ref CloudFrontPrefixListId
           FromPort: 3000
           ToPort: 3000
           IpProtocol: tcp
-        - CidrIp: 0.0.0.0/0
+
+  ExecutorSG:
+    Type: AWS::EC2::SecurityGroup
+    Condition: EnableExecutor
+    Properties:
+      GroupDescription: Piston access from the application instance only
+      SecurityGroupIngress:
+        - SourceSecurityGroupId: !GetAtt InstanceSG.GroupId
           FromPort: 2000
           ToPort: 2000
           IpProtocol: tcp
+        - CidrIp: !Ref SSHLocation
+          FromPort: 22
+          ToPort: 22
+          IpProtocol: tcp
+
+  ExecutorInstance:
+    Type: AWS::EC2::Instance
+    Condition: EnableExecutor
+    Properties:
+      ImageId: !FindInMap [RegionMap, !Ref 'AWS::Region', AMI]
+      InstanceType: c6i.large
+      KeyName: !Ref SSHKeyName
+      # Deliberately no instance profile: untrusted jobs have no AWS identity.
+      MetadataOptions:
+        HttpEndpoint: disabled
+        HttpTokens: required
+        HttpPutResponseHopLimit: 1
+      SecurityGroupIds: [!GetAtt ExecutorSG.GroupId]
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            VolumeSize: 30
+            Encrypted: true
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          set -euo pipefail
+          yum install -y git
+          git clone https://github.com/aws-samples/bedrock-claude-codecoach /opt/codecoach
+          cd /opt/codecoach
+          git checkout '${SourceRevision}'
+          export EXECUTOR_BIND_ADDRESS=0.0.0.0
+          bash init-executor.sh
 
   CloudFrontDist:
     Type: AWS::CloudFront::Distribution
@@ -99,20 +225,15 @@ Resources:
         Enabled: true
         DefaultCacheBehavior:
           TargetOriginId: myEC2Origin
-          ViewerProtocolPolicy: allow-all
-          AllowedMethods:
-            - DELETE
-            - GET
-            - HEAD
-            - OPTIONS
-            - PATCH
-            - POST
-            - PUT
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT]
           CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
           OriginRequestPolicyId: 216adef6-5c7f-47e4-b989-5492eafa07d3
-          ForwardedValues:
-            QueryString: false
 
 Outputs:
   CloudFrontDomainName:
     Value: !GetAtt CloudFrontDist.DomainName
+  ApplicationInstanceId:
+    Value: !Ref MyEC2Instance
+  ApplicationTableName:
+    Value: !If [CreateTable, !Ref ApplicationTable, !Ref ExistingTableName]

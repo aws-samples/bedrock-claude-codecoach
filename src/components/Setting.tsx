@@ -15,7 +15,7 @@ import { useRecoilState, useRecoilValue } from "recoil";
 import { awsProviderSettings, authState } from "../state"
 
 
-import { LoadPrompt } from "@utils/prompt";
+import { LoadPrompt } from "@utils/fetch";
 import fetchRequest from '@utils/fetch';
 import { rebotoColor } from "./RobotIconColor";
 import Alert from "./Alert"
@@ -42,6 +42,7 @@ const Setting = (props) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isClient, setIsClient] = useState(false);
     const [passwordReady, setPasswordReady] = useState(false);
+    const [passwordMessage, setPasswordMessage] = useState("");
 
     const [myCopilot, setMyCopilot] = useState("no");
     const [aiRole, setAIRole] = useState("CODECOACH")
@@ -58,7 +59,7 @@ const Setting = (props) => {
     const auth = useRecoilValue(authState)
    
     
-    const [authType, setAuthType] = useState(auth.role === "admin" ? "IAMROLE" : "AKSK");
+    const [authType, setAuthType] = useState("IAMROLE");
    
     const [model, setModel] = useState(awsProviderSettingsValue.model );
 
@@ -119,6 +120,7 @@ const Setting = (props) => {
     };
 
     const  handleSavePasswordClick = async () => {
+        setPasswordMessage("");
         try {
             const res: Response = await fetchRequest("POST", `/api/password`, btoa(JSON.stringify(awsProviderSettingsValue)), {
                 oldPassword:password.oldPassword,
@@ -130,9 +132,10 @@ const Setting = (props) => {
             }else{
                 setPassword({oldPassword:"",newPassword:"",newPasswordConfirm:""})
                 setPasswordReady(false)
+                setPasswordMessage("Password updated.");
             }
         }catch(e){
-           
+            setPasswordMessage("Could not change password. Check your current password and try again.");
         }
     };
 
@@ -159,7 +162,7 @@ const Setting = (props) => {
     }
 
     useEffect(() => {
-        if(password.oldPassword!=""&&password.newPassword!=""&&password.newPasswordConfirm!=""){
+        if(password.oldPassword!=""&&password.newPassword.length>=12&&password.newPassword.length<=1024&&password.newPasswordConfirm!=""){
             if(password.oldPassword!=password.newPassword&&password.oldPassword!=password.newPasswordConfirm){
                 if(password.newPassword===password.newPasswordConfirm){
                   return  setPasswordReady(true)
@@ -246,6 +249,7 @@ const Setting = (props) => {
                                 </Box>
                             </TabPanel>
                             <TabPanel>
+                                <Box mb={3}>Use a new password of at least 12 characters.</Box>
                                 {t('Old Password')}
                                 <Input
                                     type= "password"
@@ -276,6 +280,7 @@ const Setting = (props) => {
                                         })
                                     }}
                                 />
+                                {passwordMessage && <Box mt={3}>{passwordMessage}</Box>}
                                
                             </TabPanel>
 

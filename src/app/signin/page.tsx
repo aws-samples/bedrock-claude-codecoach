@@ -79,9 +79,6 @@ const SigninScreen = () => {
   }, [isAuth]);
 
   function handleClick() {
-    console.log(
-      `User login !  email : ${user.email}, password : ${user.password}`
-    );
     Post(user).then((res) => {
       if ("role" in res) {
         setAuthState({...res});

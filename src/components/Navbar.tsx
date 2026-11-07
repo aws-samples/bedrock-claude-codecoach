@@ -73,25 +73,13 @@ export default function Navbar() {
     i18n.changeLanguage(language)
   },[auth])
 
-  const handleSignOut=()=>{
-    setAuth(null)
-    fetch('/signout', {
-      method: 'GET',
-    })
-      .then(response => {
-        if (response.ok) {
-          // Logout successful
-          console.log('Successfully logged out');
-        } else {
-          // Logout failed
-          console.log('Logout failed');
-        }
-      })
-      .catch(error => {
-        console.error('Error during logout:', error);
-      });
-    router.push("/")
-    
+  const handleSignOut = async () => {
+    const response = await fetch('/signout', { method: 'POST' });
+    if (response.ok || response.status === 401) {
+      setAuth(null);
+      router.push('/signin');
+      router.refresh();
+    }
   }
 
   return (

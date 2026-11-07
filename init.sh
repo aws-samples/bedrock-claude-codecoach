@@ -1,191 +1,95 @@
-#!/bin/sh
+#!/bin/bash
+set -euo pipefail
+umask 077
 
-set -x
+if [ "$(id -u)" != 0 ]; then
+  echo "Run this script as root." >&2
+  exit 1
+fi
+cd "$(dirname "$(readlink -f "$0")")"
+if [ -f .env.executor ]; then
+  echo "Refusing to install the application on an executor host." >&2
+  exit 1
+fi
 
-init(){
-  cd ~
-  yum install -y git nodejs.x86_64 docker jq
-  npm install yarn -g
-  systemctl start docker
-  docker compose > /dev/null 2>&1
-  if [ $? -gt 0 ]; then
-      curl -L https://download.docker.com/linux/centos/7/x86_64/stable/Packages/docker-compose-plugin-2.6.0-3.el7.x86_64.rpm -o ./compose-plugin.rpm
-      yum install ./compose-plugin.rpm -y
+configure() {
+  : "${AWS_REGION:?Set AWS_REGION}"
+  : "${DDB_TABLE:?Create/select the application table and set DDB_TABLE}"
+  # Keep the signing key stable on restart; it is never added to the image.
+  if [ -z "${AUTH_SECRET:-}" ] && [ -f .env.local ]; then
+    AUTH_SECRET=$(sed -n 's/^AUTH_SECRET="\([^"]*\)"$/\1/p' .env.local)
   fi
-
-  aws --version >/dev/null 2>&1
-  if [ $? -eq 1 ]; then
-  	# install aws cli
-  	curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-  	unzip awscliv2.zip
-  	./aws/install --update
-  	rm -fr /usr/bin/aws && ln -s /usr/local/bin/aws /usr/bin/aws
-  	rm -fr awscliv2.zip ./aws
-  fi
-
-  # set default region
-  TOKEN=`curl -X PUT -s "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
-  export AWS_REGION=$(curl -s 169.254.169.254/latest/dynamic/instance-identity/document -H "X-aws-ec2-metadata-token: $TOKEN" | jq -r '.region')
-  aws configure set default.region ${AWS_REGION}
-  aws configure get default.region
-
-  # pass the role to docker
-  instance_id=$(TOKEN=`curl -X PUT -s "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"` && curl -H "X-aws-ec2-metadata-token: $TOKEN" -s  http://169.254.169.254/latest/meta-data/instance-id)
-
-  aws ec2 modify-instance-metadata-options \
-      --instance-id $instance_id \
-      --http-put-response-hop-limit 2 \
-      --http-endpoint enabled
-}
-
-add_users(){
-  email=$1
-  password=$2
-  role=$3
-  table_name="bedrock-claude-codecoach"
-  aws dynamodb list-tables | grep "${table_name}" >/dev/null 2>&1
-  if [ $? -eq 1 ]; then
-      aws dynamodb create-table \
-          --no-cli-pager \
-          --table-name bedrock-claude-codecoach \
-          --attribute-definitions \
-              AttributeName=PK,AttributeType=S \
-              AttributeName=SK,AttributeType=S \
-          --key-schema \
-              AttributeName=PK,KeyType=HASH \
-              AttributeName=SK,KeyType=RANGE \
-          --provisioned-throughput \
-              ReadCapacityUnits=5,WriteCapacityUnits=5
-      #create GSI for prompt template
-      sleep 10s
-      aws dynamodb update-table \
-          --no-cli-pager \
-          --table-name bedrock-claude-codecoach \
-          --attribute-definitions AttributeName=SK,AttributeType=S \
-          --global-secondary-index-updates \
-              "[{\"Create\":{\"IndexName\": \"SK-index\",\"KeySchema\":[{\"AttributeName\":\"SK\",\"KeyType\":\"HASH\"}], \
-              \"Projection\":{\"ProjectionType\":\"ALL\"}, \
-              \"ProvisionedThroughput\": {\"ReadCapacityUnits\":5,\"WriteCapacityUnits\":5}}}]" 
-  fi
-  password_hash=$(echo -n $password | openssl dgst -sha256 -hex | sed 's/^.* //')
-#  role=$(expr ${role} == "admin"?"admin":"guest")
-  aws dynamodb put-item \
-      --no-cli-pager \
-      --table-name bedrock-claude-codecoach \
-      --item \
-          "{\"PK\": {\"S\": \"${email}\"},\"SK\": {\"S\": \"#ACC\"}, \"password\": {\"S\": \"${password_hash}\"}, \"role\": {\"S\": \"${role}\"}}"
-
-}
-
-# build bedrock-claude-codecoach docker image
-build_image(){
-  if [ ! -d ~/bedrock-claude-codecoach ];then
-    cd ~
-    git clone https://github.com/aws-samples/bedrock-claude-codecoach
-  fi
-  cd ~/bedrock-claude-codecoach
-  # use env configuration
-  mv .env.sample .env.local
-  # set default region
-  sed -i '/^AWS_REGION/d' .env.local
-  echo "AWS_REGION=\"$(aws configure get default.region)\"" >> .env.local
-  docker build -t codecoach .
-}
-
-start(){
- #. ~/.venv/bin/activate
- cd ~/bedrock-claude-codecoach &&  docker compose up -d
-}
-
-stop(){
- #. ~/.venv/bin/activate
- cd ~/bedrock-claude-codecoach &&  docker compose down
-}
-
-add_runtime(){
-  runtime=$1
-  cd ~
-  if [ ! -d ./piston ];then
-    git clone 'https://github.com/engineer-man/piston.git'
-    cd piston/cli && npm i
-  fi
-
-  cd ~/piston
-  if $(curl -s http://127.0.0.1:2000 | grep -q "Piston");then
-    # curl -XPOST -H"Content-Type:application/json" http://127.0.0.1:2000/api/v2/packages -d'{"language":"python","version":"3.10.0"}'
-    cli/index.js --piston-url http://127.0.0.1:2000  ppman install $runtime
-  else
-    echo "add runtime failed, piston service not running"
+  AUTH_SECRET=${AUTH_SECRET:-$(openssl rand -hex 32)}
+  if [ "${#AUTH_SECRET}" -lt 32 ]; then
+    echo "AUTH_SECRET must be at least 32 bytes." >&2
     exit 1
   fi
-
+  cat > .env.local <<EOF
+AUTH_SECRET="$AUTH_SECRET"
+AWS_REGION="$AWS_REGION"
+DDB_TABLE="$DDB_TABLE"
+ENABLE_CODE_EXECUTION="${ENABLE_CODE_EXECUTION:-false}"
+PISTON_SERVER_URL="${PISTON_SERVER_URL:-}"
+APP_BIND_ADDRESS="${APP_BIND_ADDRESS:-127.0.0.1}"
+EOF
+  chmod 600 .env.local
+  mkdir -p data/uploads
+  chown 1001:1001 data/uploads
 }
 
-if [ "$(id -u)" != "0" ]; then
-   echo "please run the script with root user,you can run (sudo su -) to swich to root" 1>&2
-   exit 1
-fi
-
-if [ $# -eq 0 ];then
-      init
-      build_image
-      add_users "admin@demo.com" "123456!@#" "admin"
-      #add_users "guest@demo.com" "123456" "guest"
-      start
-      sleep 10s
-      add_runtime python=3.10.0
-      add_runtime node
-      add_runtime go
-      add_runtime php
-      add_runtime typescript
-else
-  while getopts ":struh" opt; do
-    case $opt in
-      s)
-        start
-        ;;
-
-      t)
-        stop
-        ;;
-
-      r)
-        add_runtime $2
-        ;;
-
-      u)
-        EMAIL=$2
-        PASSWORD=$3
-        ROLE=$4
-        add_users $EMAIL $PASSWORD $ROLE
-        ;;
-
-      h)
-        HELP=true
-        ;;
-
-      \?)
-        echo "Invalid option: -$OPTARG" >&2
-        exit 1
-        ;;
-    esac
-  done
-
-  if [ "$HELP" = true ]; then
-    echo "Usage: $0 [options]"
-    echo
-    echo "Options:"
-    echo " -s              Start services"
-    echo " -t              Stop services"
-    echo " -r <runtime>    Add runtime"
-    echo " -u <user>       Add user (email password role)"
-    echo " -h              Print this help"
-    exit 0
+add_user() {
+  local email=$1 role=${2:-admin} replace=${3:-false}
+  local item credentials
+  item=$(mktemp)
+  credentials=$(mktemp)
+  node scripts/seed-user.mjs "$email" "$role" "$item" "$credentials"
+  local condition=(--condition-expression 'attribute_not_exists(PK)')
+  if [ "$replace" = true ]; then condition=(); fi
+  if aws dynamodb put-item --table-name "$DDB_TABLE" --item "file://$item" "${condition[@]}"; then
+    mv "$credentials" /root/codecoach-credentials
+    echo "Generated credentials are in /root/codecoach-credentials (root only)."
+  else
+    rm -f "$item" "$credentials"
+    return 1
   fi
+  rm -f "$item"
+}
 
-fi
-
-
-
-
-
+case "${1:-install}" in
+  install)
+    bash scripts/install-docker.sh
+    yum install -y nodejs
+    if ! command -v aws >/dev/null 2>&1; then
+      temporary=$(mktemp -d)
+      curl --fail --location https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip --output "$temporary/aws.zip"
+      unzip -q "$temporary/aws.zip" -d "$temporary"
+      "$temporary/aws/install" --update
+      rm -rf "$temporary"
+    fi
+    configure
+    docker compose --env-file .env.local build
+    # Existing accounts are preserved. Reset known demo credentials explicitly
+    # with --reset-user before reopening an upgraded deployment.
+    email=${ADMIN_EMAIL:-admin@example.com}
+    key=$(jq -nc --arg email "$email" '{PK:{S:$email},SK:{S:"#ACC"}}')
+    existing=$(aws dynamodb get-item --consistent-read --table-name "$DDB_TABLE" --key "$key" --query 'Item.PK.S' --output text)
+    if [ "$existing" = None ]; then add_user "$email" admin; fi
+    docker compose --env-file .env.local up -d
+    ;;
+  -s) docker compose --env-file .env.local up -d ;;
+  -t) docker compose --env-file .env.local down ;;
+  -u|--reset-user)
+    # Read the root-owned runtime configuration for operator account changes.
+    set -a
+    # shellcheck source=/dev/null
+    source .env.local
+    set +a
+    replace=false
+    if [ "$1" = --reset-user ]; then replace=true; fi
+    add_user "${2:?Provide an email}" "${3:-admin}" "$replace"
+    ;;
+  *)
+    echo "Usage: $0 [install|-s|-t|-u EMAIL [admin|guest]|--reset-user EMAIL [admin|guest]]" >&2
+    exit 1
+    ;;
+esac
